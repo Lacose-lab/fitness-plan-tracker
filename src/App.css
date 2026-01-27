@@ -48,8 +48,10 @@ h3{margin:18px 0 8px}
 /* Shell */
 .appShell{
   min-height:100dvh;
-  padding-bottom: calc(72px + 18px + env(safe-area-inset-bottom));
+  padding-bottom: calc(72px + 18px + max(0px, env(safe-area-inset-bottom)));
 }
+
+html, body { height: 100%; }
 
 /* Generic glass surface */
 .glass{
@@ -117,6 +119,38 @@ h3{margin:18px 0 8px}
 }
 
 .main{max-width:920px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+
+/* Hero */
+.hero{
+  border-radius:24px;
+  padding:16px;
+  display:flex;
+  gap:14px;
+  align-items:center;
+}
+.heroTitle{font-weight:950;font-size:18px}
+.heroSub{color:var(--muted);font-size:12px;margin-top:2px}
+.heroStats{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px;margin-top:10px}
+.heroStat{border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:10px;background:rgba(11,15,26,0.18)}
+.heroStatLabel{color:var(--muted);font-size:11px;font-weight:800}
+.heroStatValue{margin-top:3px;font-size:14px;font-weight:950}
+
+.ringWrap{position:relative;width:72px;height:72px;flex:0 0 auto}
+.ring{
+  width:72px;height:72px;border-radius:999px;
+  background: conic-gradient(var(--accent) var(--p), rgba(255,255,255,0.12) 0);
+  display:grid;place-items:center;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+}
+.ring::after{
+  content:"";
+  width:58px;height:58px;border-radius:999px;
+  background: rgba(11,15,26,0.55);
+  border:1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.ringText{position:absolute;inset:0;display:grid;place-items:center;font-weight:950;font-size:14px}
 
 .card{
   background: var(--glass-strong);
@@ -259,7 +293,8 @@ h3{margin:18px 0 8px}
   border-top:1px solid rgba(255,255,255,0.10);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+  padding:10px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
 }
 
 .bottomNavInner{

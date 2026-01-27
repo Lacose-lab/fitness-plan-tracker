@@ -22,7 +22,7 @@ type Tab = "today" | "log" | "plan" | "progress" | "settings";
 
 type Metric = "weightKg" | "steps" | "calories" | "proteinG";
 
-const APP_VERSION = "0.0.4";
+const APP_VERSION = "0.0.5";
 
 function numberOrUndef(v: string): number | undefined {
   const n = Number(v);
@@ -302,6 +302,56 @@ export default function App() {
       <main className="main">
         {tab === "today" && (
           <>
+            {(() => {
+              const proteinRatio = Math.min(1, (todayLog?.proteinG ?? 0) / Math.max(1, settings.proteinTarget));
+              const stepsRatio = Math.min(1, (todayLog?.steps ?? 0) / Math.max(1, settings.stepGoal));
+              const workoutRatio = Math.min(
+                1,
+                (todayLog?.completedExerciseIdx?.length ?? 0) / Math.max(1, selectedPlan.exercises.length)
+              );
+              const weightDone = typeof todayLog?.weightKg === "number" ? 1 : 0;
+              const score = (proteinRatio + stepsRatio + workoutRatio + weightDone) / 4;
+              const pct = Math.round(score * 100);
+
+              return (
+                <section className="hero glass">
+                  <div className="ringWrap">
+                    <div className="ring" style={{ ["--p" as never]: `${pct}%` } as never} />
+                    <div className="ringText">{pct}%</div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className="heroTitle">Today</div>
+                    <div className="heroSub">One screen. Stay consistent.</div>
+
+                    <div className="heroStats">
+                      <div className="heroStat">
+                        <div className="heroStatLabel">Protein</div>
+                        <div className="heroStatValue">
+                          {(todayLog?.proteinG ?? 0)}/{settings.proteinTarget} g
+                        </div>
+                      </div>
+                      <div className="heroStat">
+                        <div className="heroStatLabel">Steps</div>
+                        <div className="heroStatValue">
+                          {(todayLog?.steps ?? 0)}/{settings.stepGoal}
+                        </div>
+                      </div>
+                      <div className="heroStat">
+                        <div className="heroStatLabel">Workout</div>
+                        <div className="heroStatValue">
+                          {(todayLog?.completedExerciseIdx?.length ?? 0)}/{selectedPlan.exercises.length} done
+                        </div>
+                      </div>
+                      <div className="heroStat">
+                        <div className="heroStatLabel">Weight</div>
+                        <div className="heroStatValue">{typeof todayLog?.weightKg === "number" ? `${todayLog.weightKg} kg` : "—"}</div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              );
+            })()}
+
             <section className="card">
               <div className="row" style={{ justifyContent: "space-between" }}>
                 <div>
