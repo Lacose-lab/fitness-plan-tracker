@@ -26,9 +26,11 @@ h3{margin:18px 0 8px}
 /* Shell */
 .appShell{
   min-height:100dvh;
-  padding-bottom:84px; /* room for bottom nav */
+  /* room for bottom nav + iOS safe area */
+  padding-bottom: calc(72px + 18px + env(safe-area-inset-bottom));
 }
 
+/* AppBar (centered like content) */
 .appBar{
   position:sticky;
   top:0;
@@ -36,6 +38,11 @@ h3{margin:18px 0 8px}
   backdrop-filter: blur(10px);
   background: rgba(11,15,26,0.7);
   border-bottom:1px solid var(--border);
+}
+
+.appBarInner{
+  max-width:920px;
+  margin:0 auto;
   padding:14px 16px;
   display:flex;
   justify-content:space-between;
@@ -160,21 +167,27 @@ h3{margin:18px 0 8px}
 
 .hint{margin-top:12px;color:var(--muted);font-size:13px}
 
-/* Bottom nav */
+/* Bottom nav (centered) */
 .bottomNav{
   position:fixed;
   left:0;
   right:0;
   bottom:0;
   z-index:20;
-  display:flex;
-  gap:6px;
-  padding:10px;
   background: rgba(11,15,26,0.86);
   border-top:1px solid var(--border);
   backdrop-filter: blur(10px);
+  padding:10px 10px calc(10px + env(safe-area-inset-bottom));
 }
-.bottomNav button{
+
+.bottomNavInner{
+  max-width:920px;
+  margin:0 auto;
+  display:flex;
+  gap:6px;
+}
+
+.bottomNavInner button{
   flex:1;
   background:transparent;
   color:var(--muted);
@@ -182,7 +195,7 @@ h3{margin:18px 0 8px}
   padding:10px 8px;
   border-radius:14px;
 }
-.bottomNav button.active{
+.bottomNavInner button.active{
   color:var(--text);
   border-color:rgba(79,140,255,0.6);
   background:rgba(79,140,255,0.12);
@@ -192,7 +205,7 @@ h3{margin:18px 0 8px}
 .fab{
   position:fixed;
   right:16px;
-  bottom:84px;
+  bottom: calc(82px + env(safe-area-inset-bottom));
   width:54px;
   height:54px;
   border-radius:18px;

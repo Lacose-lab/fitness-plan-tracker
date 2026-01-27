@@ -21,7 +21,7 @@ type Tab = "today" | "log" | "plan" | "progress" | "settings";
 
 type Metric = "weightKg" | "steps" | "calories" | "proteinG";
 
-const APP_VERSION = "0.0.1";
+const APP_VERSION = "0.0.2";
 
 function numberOrUndef(v: string): number | undefined {
   const n = Number(v);
@@ -248,13 +248,23 @@ export default function App() {
   return (
     <div className="appShell">
       <header className="appBar">
-        <div>
-          <div className="appTitle">
-            {tab === "today" ? "Today" : tab === "log" ? "Log" : tab === "plan" ? "Plan" : tab === "progress" ? "Progress" : "Settings"}
+        <div className="appBarInner">
+          <div>
+            <div className="appTitle">
+              {tab === "today"
+                ? "Today"
+                : tab === "log"
+                  ? "Log"
+                  : tab === "plan"
+                    ? "Plan"
+                    : tab === "progress"
+                      ? "Progress"
+                      : "Settings"}
+            </div>
+            <div className="appSub">{today}</div>
           </div>
-          <div className="appSub">{today}</div>
+          <div className="appBadge">v{APP_VERSION}</div>
         </div>
-        <div className="appBadge">v{APP_VERSION}</div>
       </header>
 
       <main className="main">
@@ -578,26 +588,30 @@ export default function App() {
         )}
       </main>
 
-      <button className="fab" onClick={() => openMetric("weightKg")} aria-label="Quick log">
-        +
-      </button>
+      {tab !== "today" && (
+        <button className="fab" onClick={() => openMetric("weightKg")} aria-label="Quick log">
+          +
+        </button>
+      )}
 
       <nav className="bottomNav">
-        <button className={tab === "today" ? "active" : ""} onClick={() => setTab("today")}>
-          Today
-        </button>
-        <button className={tab === "log" ? "active" : ""} onClick={() => setTab("log")}>
-          Log
-        </button>
-        <button className={tab === "plan" ? "active" : ""} onClick={() => setTab("plan")}>
-          Plan
-        </button>
-        <button className={tab === "progress" ? "active" : ""} onClick={() => setTab("progress")}>
-          Progress
-        </button>
-        <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>
-          Settings
-        </button>
+        <div className="bottomNavInner">
+          <button className={tab === "today" ? "active" : ""} onClick={() => setTab("today")}>
+            Today
+          </button>
+          <button className={tab === "log" ? "active" : ""} onClick={() => setTab("log")}>
+            Log
+          </button>
+          <button className={tab === "plan" ? "active" : ""} onClick={() => setTab("plan")}>
+            Plan
+          </button>
+          <button className={tab === "progress" ? "active" : ""} onClick={() => setTab("progress")}>
+            Progress
+          </button>
+          <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>
+            Settings
+          </button>
+        </div>
       </nav>
 
       <MetricSheet
