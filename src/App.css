@@ -20,11 +20,24 @@ body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
   background:
-    radial-gradient(900px 520px at 15% -10%, rgba(79,140,255,0.35), transparent 60%),
+    radial-gradient(900px 520px at 15% -10%, rgba(79,140,255,0.38), transparent 60%),
     radial-gradient(700px 420px at 100% 10%, rgba(29,191,115,0.18), transparent 55%),
     radial-gradient(900px 600px at 40% 110%, rgba(255,255,255,0.06), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,0.03), transparent 30%),
     var(--bg);
   color:var(--text);
+}
+
+/* subtle noise overlay for “Apple-ish” depth */
+body:before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.20'/%3E%3C/svg%3E");
+  opacity:0.08;
+  mix-blend-mode: overlay;
 }
 
 h2{margin:0 0 10px}
@@ -40,11 +53,36 @@ h3{margin:18px 0 8px}
 
 /* Generic glass surface */
 .glass{
+  position: relative;
   background: var(--glass);
   border:1px solid var(--glass-border);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow: var(--shadow);
+  overflow:hidden;
+}
+
+/* glass sheen */
+.glass::before{
+  content:"";
+  position:absolute;
+  inset:-40% -40% auto -40%;
+  height:120%;
+  background: linear-gradient(115deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 35%, transparent 55%);
+  transform: translateX(-35%) rotate(8deg);
+  opacity:0.8;
+  pointer-events:none;
+}
+
+/* a tiny animated shimmer on supported devices */
+@media (prefers-reduced-motion: no-preference){
+  .glass::before{
+    animation: sheen 7s ease-in-out infinite;
+  }
+  @keyframes sheen{
+    0%,100%{ transform: translateX(-35%) rotate(8deg); opacity:0.75; }
+    50%{ transform: translateX(15%) rotate(8deg); opacity:0.55; }
+  }
 }
 
 /* AppBar (centered) */
@@ -138,12 +176,20 @@ h3{margin:18px 0 8px}
   align-items:center;
   gap:12px;
   padding:12px;
-  border-radius:16px;
+  border-radius:18px;
   color:var(--text);
   cursor:pointer;
+  transition: transform .12s ease, border-color .2s ease, background .2s ease;
 }
-.metricTitle{font-weight:900}
-.metricRight{font-weight:900;color:var(--text)}
+.metricRow:active{ transform: scale(0.985); }
+
+.metricLeft{display:flex;align-items:center;gap:12px}
+
+.metricTitle{font-weight:950}
+.metricRight{font-weight:950;color:var(--text)}
+
+.icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;color:rgba(234,240,255,0.9)}
+.icon svg{width:22px;height:22px}
 
 .quickActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
 .pillBtn{
@@ -229,8 +275,17 @@ h3{margin:18px 0 8px}
   color:var(--muted);
   border:1px solid rgba(255,255,255,0.10);
   padding:10px 8px;
-  border-radius:16px;
+  border-radius:18px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
 }
+.bottomNavInner button span{font-size:11px; font-weight:800; letter-spacing:0.2px}
+.bottomNavInner button .icon{width:20px;height:20px; color: rgba(157,176,215,0.95)}
+.bottomNavInner button.active .icon{color: rgba(234,240,255,0.95)}
+
 .bottomNavInner button.active{
   color:var(--text);
   border-color:rgba(79,140,255,0.45);

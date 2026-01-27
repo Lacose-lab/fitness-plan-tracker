@@ -5,6 +5,7 @@ import { exportJson, importJson, listLogs, todayKey, upsertLog, type DayLog } fr
 import { getSettings, updateSettings } from "./lib/settings";
 import { getSummary } from "./lib/stats";
 import { Line } from "react-chartjs-2";
+import { Icon, IFlame, ILog, IPlan, IProgress, IProtein, ISettings, ISteps, IToday, IWeight } from "./ui/icons";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -21,7 +22,7 @@ type Tab = "today" | "log" | "plan" | "progress" | "settings";
 
 type Metric = "weightKg" | "steps" | "calories" | "proteinG";
 
-const APP_VERSION = "0.0.3";
+const APP_VERSION = "0.0.4";
 
 function numberOrUndef(v: string): number | undefined {
   const n = Number(v);
@@ -245,6 +246,37 @@ export default function App() {
     return items;
   }, [todayLog, settings]);
 
+  const metricIcon = (m: Metric) => {
+    switch (m) {
+      case "weightKg":
+        return (
+          <Icon>
+            <IWeight />
+          </Icon>
+        );
+      case "steps":
+        return (
+          <Icon>
+            <ISteps />
+          </Icon>
+        );
+      case "calories":
+        return (
+          <Icon>
+            <IFlame />
+          </Icon>
+        );
+      case "proteinG":
+        return (
+          <Icon>
+            <IProtein />
+          </Icon>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="appShell">
       <header className="appBar">
@@ -282,9 +314,12 @@ export default function App() {
                 {dailyChecklist.map((it) => (
                   <li key={it.key}>
                     <button className="metricRow glass" onClick={() => openMetric(it.key)}>
-                      <div>
-                        <div className="metricTitle">{it.title}</div>
-                        <div className="muted">{it.sub}</div>
+                      <div className="metricLeft">
+                        {metricIcon(it.key)}
+                        <div>
+                          <div className="metricTitle">{it.title}</div>
+                          <div className="muted">{it.sub}</div>
+                        </div>
                       </div>
                       <div className="metricRight">{it.right}</div>
                     </button>
@@ -604,19 +639,24 @@ export default function App() {
       <nav className="bottomNav">
         <div className="bottomNavInner">
           <button className={tab === "today" ? "active" : ""} onClick={() => setTab("today")}>
-            Today
+            <Icon><IToday /></Icon>
+            <span>Today</span>
           </button>
           <button className={tab === "log" ? "active" : ""} onClick={() => setTab("log")}>
-            Log
+            <Icon><ILog /></Icon>
+            <span>Log</span>
           </button>
           <button className={tab === "plan" ? "active" : ""} onClick={() => setTab("plan")}>
-            Plan
+            <Icon><IPlan /></Icon>
+            <span>Plan</span>
           </button>
           <button className={tab === "progress" ? "active" : ""} onClick={() => setTab("progress")}>
-            Progress
+            <Icon><IProgress /></Icon>
+            <span>Progress</span>
           </button>
           <button className={tab === "settings" ? "active" : ""} onClick={() => setTab("settings")}>
-            Settings
+            <Icon><ISettings /></Icon>
+            <span>Settings</span>
           </button>
         </div>
       </nav>
