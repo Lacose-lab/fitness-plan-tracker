@@ -22,7 +22,7 @@ type Tab = "today" | "log" | "plan" | "progress" | "settings";
 
 type Metric = "weightKg" | "steps" | "calories" | "proteinG";
 
-const APP_VERSION = "0.0.5";
+const APP_VERSION = "0.0.6";
 
 function numberOrUndef(v: string): number | undefined {
   const n = Number(v);
