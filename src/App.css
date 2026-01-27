@@ -99,15 +99,21 @@ html, body { height: 100%; }
 }
 
 .appBar{
-  position:sticky;
+  position:fixed;
   top:0;
-  z-index:10;
+  left:0;
+  right:0;
+  z-index:50;
   background: rgba(11,15,26,0.55);
   border-bottom:1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  /* iOS PWA safe-area (some iOS builds only respect it on the container) */
+  /* iOS PWA safe-area */
   padding-top: max(var(--safe-top), var(--safe-top-legacy), 12px);
+}
+
+.appBarSpacer{
+  height: calc(56px + max(var(--safe-top), var(--safe-top-legacy), 12px));
 }
 
 .appBarInner{
@@ -117,6 +123,7 @@ html, body { height: 100%; }
   display:flex;
   justify-content:space-between;
   align-items:center;
+  min-height:56px;
 }
 
 .appTitle{font-weight:900;font-size:18px;letter-spacing:0.2px}

@@ -22,7 +22,7 @@ type Tab = "today" | "log" | "plan" | "progress" | "settings";
 
 type Metric = "weightKg" | "steps" | "calories" | "proteinG";
 
-const APP_VERSION = "0.0.8";
+const APP_VERSION = "0.0.9";
 
 function numberOrUndef(v: string): number | undefined {
   const n = Number(v);
@@ -298,6 +298,7 @@ export default function App() {
           <div className="appBadge">v{APP_VERSION}</div>
         </div>
       </header>
+      <div className="appBarSpacer" />
 
       <main className="main">
         {tab === "today" && (

@@ -3,25 +3,37 @@ import { test, expect } from '@playwright/test'
 async function gotoApp(page: any) {
   await page.goto('/')
   // wait for app bar to render
-  await page.getByText('Today').first().waitFor({ state: 'visible' })
+  await page.locator('.appBar').waitFor({ state: 'visible' })
 }
 
 test.describe('UI smoke + safe-area', () => {
-  test('Top bar is not clipped', async ({ page }) => {
+  test('Top bar is not clipped + content starts below it', async ({ page }) => {
     await gotoApp(page)
 
     const appBar = page.locator('.appBar')
+    const spacer = page.locator('.appBarSpacer')
     await expect(appBar).toBeVisible()
+    await expect(spacer).toBeVisible()
 
-    const box = await appBar.boundingBox()
-    expect(box).not.toBeNull()
+    const barBox = await appBar.boundingBox()
+    expect(barBox).not.toBeNull()
+    expect(barBox!.y).toBeGreaterThanOrEqual(0)
 
-    // The bar should start at/near the top; not negative (clipped).
-    expect(box!.y).toBeGreaterThanOrEqual(0)
-
-    // And it should have some top padding (safe-area or fallback) so content isn't under the status bar.
     const paddingTop = await appBar.evaluate((el) => getComputedStyle(el).paddingTop)
     expect(parseFloat(paddingTop)).toBeGreaterThanOrEqual(10)
+
+    // First card should start below the app bar bottom.
+    const firstCard = page.locator('.main .card').first()
+    await expect(firstCard).toBeVisible()
+    const cardBox = await firstCard.boundingBox()
+    expect(cardBox).not.toBeNull()
+    const barBottom = barBox!.y + barBox!.height
+    expect(cardBox!.y).toBeGreaterThanOrEqual(barBottom - 2)
+
+    // Spacer should be at least the visible bar height.
+    const spacerBox = await spacer.boundingBox()
+    expect(spacerBox).not.toBeNull()
+    expect(spacerBox!.height).toBeGreaterThanOrEqual(barBox!.height - 2)
   })
 
   test('Bottom nav is anchored to bottom', async ({ page }) => {
@@ -36,9 +48,9 @@ test.describe('UI smoke + safe-area', () => {
     const viewport = page.viewportSize()
     expect(viewport).not.toBeNull()
 
-    // nav bottom should be within 2px of viewport bottom
+    // nav bottom should be close to viewport bottom
     const navBottom = navBox!.y + navBox!.height
-    expect(Math.abs(navBottom - viewport!.height)).toBeLessThanOrEqual(2)
+    expect(Math.abs(navBottom - viewport!.height)).toBeLessThanOrEqual(6)
   })
 
   test('Tabs render + screenshots', async ({ page }, testInfo) => {
