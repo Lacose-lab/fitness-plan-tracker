@@ -15,8 +15,13 @@ test.describe('UI smoke + safe-area', () => {
 
     const box = await appBar.boundingBox()
     expect(box).not.toBeNull()
+
     // The bar should start at/near the top; not negative (clipped).
     expect(box!.y).toBeGreaterThanOrEqual(0)
+
+    // And it should have some top padding (safe-area or fallback) so content isn't under the status bar.
+    const paddingTop = await appBar.evaluate((el) => getComputedStyle(el).paddingTop)
+    expect(parseFloat(paddingTop)).toBeGreaterThanOrEqual(10)
   })
 
   test('Bottom nav is anchored to bottom', async ({ page }) => {

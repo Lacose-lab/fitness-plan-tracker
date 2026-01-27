@@ -18,8 +18,9 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
     {
-      name: 'iPhone 13 (WebKit)',
-      use: { ...devices['iPhone 13'] },
+      name: 'iPhone 15 Pro Max (WebKit)',
+      // closest available device profile in Playwright; if missing, fallback to iPhone 14 Pro Max.
+      use: { ...(devices['iPhone 15 Pro Max'] ?? devices['iPhone 14 Pro Max'] ?? devices['iPhone 13']) },
     },
   ],
 })
