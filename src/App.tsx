@@ -86,6 +86,27 @@ export default function App() {
     setTick((t) => t + 1);
   }
 
+  function setPlanDay(planDayId: string) {
+    // When switching the planned session, reset the checklist + done state for the day.
+    save({ planDayId, completedExerciseIdx: [], workoutDone: false });
+  }
+
+  function toggleExercise(i: number) {
+    const current = new Set(todayLog?.completedExerciseIdx ?? []);
+    if (current.has(i)) current.delete(i);
+    else current.add(i);
+
+    const next = Array.from(current).sort((a, b) => a - b);
+    const total = selectedPlan.exercises.length;
+    const allDone = total > 0 && next.length === total;
+
+    save({ completedExerciseIdx: next, workoutDone: allDone ? true : todayLog?.workoutDone });
+  }
+
+  function resetChecklist() {
+    save({ completedExerciseIdx: [], workoutDone: false });
+  }
+
   return (
     <div className="container">
       <header className="header">
@@ -122,10 +143,7 @@ export default function App() {
 
           <label className="field">
             <span>Planned session</span>
-            <select
-              value={todayLog?.planDayId ?? selectedPlan.id}
-              onChange={(e) => save({ planDayId: e.target.value })}
-            >
+            <select value={todayLog?.planDayId ?? selectedPlan.id} onChange={(e) => setPlanDay(e.target.value)}>
               {WEEK_PLAN.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.title}
@@ -135,18 +153,42 @@ export default function App() {
           </label>
 
           <div className="planBox">
-            <div className="planTitle">{selectedPlan.title}</div>
-            <div className="muted">{selectedPlan.focus}</div>
-            <ul className="list">
-              {selectedPlan.exercises.map((ex, i) => (
-                <li key={i}>
-                  <div className="exName">{ex.name}</div>
-                  <div className="exMeta">
-                    {ex.sets ? <span className="pill">{ex.sets}</span> : null}
-                    {ex.notes ? <span className="muted">{ex.notes}</span> : null}
-                  </div>
-                </li>
-              ))}
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <div>
+                <div className="planTitle">{selectedPlan.title}</div>
+                <div className="muted">{selectedPlan.focus}</div>
+              </div>
+              <button className="btn" onClick={resetChecklist}>
+                Reset checklist
+              </button>
+            </div>
+
+            <div className="muted" style={{ marginTop: 10 }}>
+              {(() => {
+                const done = (todayLog?.completedExerciseIdx ?? []).length;
+                const total = selectedPlan.exercises.length;
+                return `${done}/${total} completed`;
+              })()}
+            </div>
+
+            <ul className="checklist">
+              {selectedPlan.exercises.map((ex, i) => {
+                const checked = (todayLog?.completedExerciseIdx ?? []).includes(i);
+                return (
+                  <li key={i} className={checked ? "checked" : ""}>
+                    <label className="checkRow">
+                      <input type="checkbox" checked={checked} onChange={() => toggleExercise(i)} />
+                      <div className="checkBody">
+                        <div className="exName">{ex.name}</div>
+                        <div className="exMeta">
+                          {ex.sets ? <span className="pill">{ex.sets}</span> : null}
+                          {ex.notes ? <span className="muted">{ex.notes}</span> : null}
+                        </div>
+                      </div>
+                    </label>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -201,7 +243,16 @@ export default function App() {
           <div className="row">
             <button
               className={todayLog?.workoutDone ? "btn good" : "btn"}
-              onClick={() => save({ workoutDone: !todayLog?.workoutDone })}
+              onClick={() => {
+                const total = selectedPlan.exercises.length;
+                const done = (todayLog?.completedExerciseIdx ?? []).length;
+                if (!todayLog?.workoutDone && total > 0 && done !== total) {
+                  // If they manually mark done, also check everything.
+                  save({ workoutDone: true, completedExerciseIdx: selectedPlan.exercises.map((_, i) => i) });
+                } else {
+                  save({ workoutDone: !todayLog?.workoutDone });
+                }
+              }}
             >
               {todayLog?.workoutDone ? "Workout marked done" : "Mark workout done"}
             </button>

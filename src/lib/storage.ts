@@ -8,6 +8,8 @@ export type DayLog = {
   proteinG?: number;
   workoutDone?: boolean;
   planDayId?: string;
+  // Daily checklist for the selected plan day (by exercise index)
+  completedExerciseIdx?: number[];
   note?: string;
 };
 

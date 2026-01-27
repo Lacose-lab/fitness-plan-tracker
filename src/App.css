@@ -85,6 +85,14 @@ h3{margin:18px 0 8px}
 .exMeta{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .pill{display:inline-flex;border:1px solid var(--border);border-radius:999px;padding:2px 10px;color:var(--muted);font-size:12px}
 
+.checklist{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.checkRow{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.checkRow input{width:20px;height:20px;margin-top:2px;accent-color: var(--accent)}
+.checkBody{flex:1}
+.checklist li{border:1px solid var(--border);border-radius:14px;padding:10px 12px;background:rgba(11,15,26,0.28)}
+.checklist li.checked{background:rgba(29,191,115,0.12);border-color:rgba(29,191,115,0.35)}
+.checklist li.checked .exName{opacity:0.85;text-decoration:line-through}
+
 .stack{display:flex;flex-direction:column;gap:14px;margin-top:12px}
 .planDay{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(11,15,26,0.3)}
 .planDayHeader{display:flex;justify-content:space-between;gap:10px}
