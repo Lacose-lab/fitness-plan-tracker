@@ -1,12 +1,17 @@
 :root{
   --bg:#0b0f1a;
-  --card:#121a2b;
   --text:#eaf0ff;
   --muted:#9db0d7;
   --accent:#4f8cff;
   --good:#1dbf73;
   --danger:#ff4d4d;
-  --border:rgba(255,255,255,0.08);
+
+  /* Liquid glass tokens */
+  --glass: rgba(18, 26, 43, 0.55);
+  --glass-strong: rgba(18, 26, 43, 0.78);
+  --glass-border: rgba(255,255,255,0.12);
+  --glass-border-strong: rgba(255,255,255,0.18);
+  --shadow: 0 12px 40px rgba(0,0,0,0.35);
 }
 
 *{box-sizing:border-box}
@@ -14,7 +19,11 @@
 body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  background: radial-gradient(1000px 500px at 10% 0%, rgba(79,140,255,0.25), transparent), var(--bg);
+  background:
+    radial-gradient(900px 520px at 15% -10%, rgba(79,140,255,0.35), transparent 60%),
+    radial-gradient(700px 420px at 100% 10%, rgba(29,191,115,0.18), transparent 55%),
+    radial-gradient(900px 600px at 40% 110%, rgba(255,255,255,0.06), transparent 55%),
+    var(--bg);
   color:var(--text);
 }
 
@@ -26,18 +35,27 @@ h3{margin:18px 0 8px}
 /* Shell */
 .appShell{
   min-height:100dvh;
-  /* room for bottom nav + iOS safe area */
   padding-bottom: calc(72px + 18px + env(safe-area-inset-bottom));
 }
 
-/* AppBar (centered like content) */
+/* Generic glass surface */
+.glass{
+  background: var(--glass);
+  border:1px solid var(--glass-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow);
+}
+
+/* AppBar (centered) */
 .appBar{
   position:sticky;
   top:0;
   z-index:10;
-  backdrop-filter: blur(10px);
-  background: rgba(11,15,26,0.7);
-  border-bottom:1px solid var(--border);
+  background: rgba(11,15,26,0.55);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .appBarInner{
@@ -51,16 +69,25 @@ h3{margin:18px 0 8px}
 
 .appTitle{font-weight:900;font-size:18px;letter-spacing:0.2px}
 .appSub{color:var(--muted);font-size:12px;margin-top:2px}
-.appBadge{border:1px solid var(--border);padding:6px 10px;border-radius:999px;color:var(--muted);font-size:12px}
+.appBadge{
+  border:1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  padding:6px 10px;
+  border-radius:999px;
+  color:var(--muted);
+  font-size:12px;
+}
 
 .main{max-width:920px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px}
 
 .card{
-  background:rgba(18,26,43,0.9);
-  border:1px solid var(--border);
-  border-radius:18px;
+  background: var(--glass-strong);
+  border:1px solid var(--glass-border);
+  border-radius:20px;
   padding:16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .row{display:flex;gap:10px;align-items:center;justify-content:flex-start;margin-top:10px;flex-wrap:wrap}
@@ -69,9 +96,9 @@ h3{margin:18px 0 8px}
 .field span{color:var(--muted);font-size:13px}
 .field input,.field select,.field textarea{
   padding:10px 12px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  background:rgba(11,15,26,0.6);
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.12);
+  background: rgba(11,15,26,0.35);
   color:var(--text);
   outline:none;
 }
@@ -81,24 +108,24 @@ h3{margin:18px 0 8px}
 @media (max-width:720px){.grid2{grid-template-columns:1fr}}
 
 .btn{
-  background:rgba(79,140,255,0.16);
-  border:1px solid rgba(79,140,255,0.5);
+  background: rgba(79,140,255,0.14);
+  border:1px solid rgba(79,140,255,0.42);
   color:var(--text);
   padding:10px 12px;
-  border-radius:12px;
+  border-radius:14px;
   cursor:pointer;
 }
-.btn.good{background:rgba(29,191,115,0.18);border-color:rgba(29,191,115,0.6)}
-.btn.danger{background:rgba(255,77,77,0.12);border-color:rgba(255,77,77,0.55)}
-.btn.primary{width:100%; padding:12px 14px; font-weight:800; background:rgba(79,140,255,0.22)}
+.btn.good{background:rgba(29,191,115,0.16);border-color:rgba(29,191,115,0.5)}
+.btn.danger{background:rgba(255,77,77,0.12);border-color:rgba(255,77,77,0.5)}
+.btn.primary{width:100%; padding:12px 14px; font-weight:900; background:rgba(79,140,255,0.18)}
 
 .iconBtn{
-  background:transparent;
-  border:1px solid var(--border);
+  background: rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.14);
   color:var(--muted);
   width:36px;
   height:36px;
-  border-radius:12px;
+  border-radius:14px;
 }
 
 /* Today checklist */
@@ -111,72 +138,81 @@ h3{margin:18px 0 8px}
   align-items:center;
   gap:12px;
   padding:12px;
-  border-radius:14px;
-  border:1px solid var(--border);
-  background:rgba(11,15,26,0.3);
+  border-radius:16px;
   color:var(--text);
   cursor:pointer;
 }
-.metricTitle{font-weight:800}
-.metricRight{font-weight:800;color:var(--text)}
+.metricTitle{font-weight:900}
+.metricRight{font-weight:900;color:var(--text)}
+
+.quickActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.pillBtn{
+  background: rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  color: var(--text);
+  padding:8px 12px;
+  border-radius:999px;
+  cursor:pointer;
+}
 
 .metricCard{
   text-align:left;
-  border:1px solid var(--border);
-  border-radius:16px;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:18px;
   padding:14px;
-  background:rgba(11,15,26,0.3);
+  background: rgba(11,15,26,0.3);
   color:var(--text);
   cursor:pointer;
 }
-.metricBig{font-size:22px;font-weight:900;margin-top:8px}
+.metricBig{font-size:22px;font-weight:950;margin-top:8px}
 
 /* Workout */
-.planBox{margin-top:12px;border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(11,15,26,0.35)}
-.planTitle{font-weight:800}
+.planBox{margin-top:12px;border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:12px;background:rgba(11,15,26,0.25)}
+.planTitle{font-weight:900}
 
 .checklist{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
 .checkRow{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
 .checkRow input{width:20px;height:20px;margin-top:2px;accent-color: var(--accent)}
 .checkBody{flex:1}
-.checklist li{border:1px solid var(--border);border-radius:14px;padding:10px 12px;background:rgba(11,15,26,0.28)}
-.checklist li.checked{background:rgba(29,191,115,0.12);border-color:rgba(29,191,115,0.35)}
-.checklist li.checked .exName{opacity:0.85;text-decoration:line-through}
-.exName{font-weight:700}
+.checklist li{border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:10px 12px;background:rgba(11,15,26,0.22)}
+.checklist li.checked{background:rgba(29,191,115,0.10);border-color:rgba(29,191,115,0.28)}
+.checklist li.checked .exName{opacity:0.88;text-decoration:line-through}
+.exName{font-weight:850}
 .exMeta{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.pill{display:inline-flex;border:1px solid var(--border);border-radius:999px;padding:2px 10px;color:var(--muted);font-size:12px}
+.pill{display:inline-flex;border:1px solid rgba(255,255,255,0.10);border-radius:999px;padding:2px 10px;color:var(--muted);font-size:12px}
 
 /* Plan */
 .stack{display:flex;flex-direction:column;gap:14px;margin-top:12px}
-.planDay{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(11,15,26,0.3)}
+.planDay{border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:12px;background:rgba(11,15,26,0.22)}
 .planDayHeader{display:flex;justify-content:space-between;gap:10px}
 .list{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
 
 /* Progress */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
 @media (max-width:850px){.kpis{grid-template-columns:repeat(2,1fr)}}
-.kpi{border:1px solid var(--border);border-radius:14px;padding:10px;background:rgba(11,15,26,0.35)}
+.kpi{border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:10px;background:rgba(11,15,26,0.22)}
 .kpiLabel{color:var(--muted);font-size:12px}
-.kpiValue{font-weight:900;font-size:18px;margin-top:4px}
-.chart{border:1px solid var(--border);border-radius:14px;padding:12px;background:rgba(11,15,26,0.35)}
+.kpiValue{font-weight:950;font-size:18px;margin-top:4px}
+.chart{border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:12px;background:rgba(11,15,26,0.22)}
 
-.table{border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.table{border:1px solid rgba(255,255,255,0.10);border-radius:18px;overflow:hidden}
 .tHead,.tRow{display:grid;grid-template-columns:1.1fr 0.8fr 0.8fr 0.6fr;gap:8px;padding:10px 12px}
-.tHead{background:rgba(79,140,255,0.12);color:var(--muted);font-size:12px}
-.tRow{border-top:1px solid var(--border)}
+.tHead{background:rgba(79,140,255,0.10);color:var(--muted);font-size:12px}
+.tRow{border-top:1px solid rgba(255,255,255,0.08)}
 
 .hint{margin-top:12px;color:var(--muted);font-size:13px}
 
-/* Bottom nav (centered) */
+/* Bottom nav (centered, glass) */
 .bottomNav{
   position:fixed;
   left:0;
   right:0;
   bottom:0;
   z-index:20;
-  background: rgba(11,15,26,0.86);
-  border-top:1px solid var(--border);
-  backdrop-filter: blur(10px);
+  background: rgba(11,15,26,0.58);
+  border-top:1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   padding:10px 10px calc(10px + env(safe-area-inset-bottom));
 }
 
@@ -189,15 +225,15 @@ h3{margin:18px 0 8px}
 
 .bottomNavInner button{
   flex:1;
-  background:transparent;
+  background: rgba(255,255,255,0.04);
   color:var(--muted);
-  border:1px solid var(--border);
+  border:1px solid rgba(255,255,255,0.10);
   padding:10px 8px;
-  border-radius:14px;
+  border-radius:16px;
 }
 .bottomNavInner button.active{
   color:var(--text);
-  border-color:rgba(79,140,255,0.6);
+  border-color:rgba(79,140,255,0.45);
   background:rgba(79,140,255,0.12);
 }
 
@@ -209,11 +245,12 @@ h3{margin:18px 0 8px}
   width:54px;
   height:54px;
   border-radius:18px;
-  border:1px solid rgba(79,140,255,0.6);
-  background:rgba(79,140,255,0.2);
+  border:1px solid rgba(79,140,255,0.5);
+  background: rgba(79,140,255,0.18);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
   color:var(--text);
   font-size:28px;
-  font-weight:900;
+  font-weight:950;
   z-index:25;
 }
 
@@ -229,32 +266,34 @@ h3{margin:18px 0 8px}
 }
 .sheet{
   width:min(720px, 100%);
-  background:rgba(18,26,43,0.98);
-  border:1px solid var(--border);
-  border-radius:18px 18px 0 0;
+  background: rgba(18,26,43,0.72);
+  border:1px solid rgba(255,255,255,0.14);
+  border-radius:22px 22px 0 0;
   padding:14px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 .sheetHeader{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.sheetTitle{font-weight:900;font-size:16px}
+.sheetTitle{font-weight:950;font-size:16px}
 .sheetBody{margin-top:12px;display:flex;flex-direction:column;gap:12px}
 
 .sheetInputRow{display:flex;gap:10px;align-items:center}
 .sheetInput{
   flex:1;
   font-size:28px;
-  font-weight:900;
+  font-weight:950;
   padding:12px 14px;
-  border-radius:16px;
-  border:1px solid var(--border);
-  background:rgba(11,15,26,0.55);
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(11,15,26,0.32);
   color:var(--text);
 }
-.sheetUnit{color:var(--muted);font-weight:800}
+.sheetUnit{color:var(--muted);font-weight:900}
 
 .chips{display:flex;gap:10px;flex-wrap:wrap}
 .chipBtn{
-  background:rgba(11,15,26,0.35);
-  border:1px solid var(--border);
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.12);
   color:var(--muted);
   padding:8px 12px;
   border-radius:999px;

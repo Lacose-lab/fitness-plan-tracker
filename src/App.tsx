@@ -21,7 +21,7 @@ type Tab = "today" | "log" | "plan" | "progress" | "settings";
 
 type Metric = "weightKg" | "steps" | "calories" | "proteinG";
 
-const APP_VERSION = "0.0.2";
+const APP_VERSION = "0.0.3";
 
 function numberOrUndef(v: string): number | undefined {
   const n = Number(v);
@@ -281,7 +281,7 @@ export default function App() {
               <ul className="metricList">
                 {dailyChecklist.map((it) => (
                   <li key={it.key}>
-                    <button className="metricRow" onClick={() => openMetric(it.key)}>
+                    <button className="metricRow glass" onClick={() => openMetric(it.key)}>
                       <div>
                         <div className="metricTitle">{it.title}</div>
                         <div className="muted">{it.sub}</div>
@@ -291,6 +291,13 @@ export default function App() {
                   </li>
                 ))}
               </ul>
+
+              <div className="quickActions">
+                <button className="pillBtn" onClick={() => openMetric("weightKg")}>Log weight</button>
+                <button className="pillBtn" onClick={() => openMetric("steps")}>Add steps</button>
+                <button className="pillBtn" onClick={() => openMetric("calories")}>Add calories</button>
+                <button className="pillBtn" onClick={() => openMetric("proteinG")}>Add protein</button>
+              </div>
 
               <div className="hint">Targets are editable in Settings.</div>
             </section>
