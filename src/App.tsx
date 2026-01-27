@@ -1,14 +1,8 @@
 import "./App.css";
 import { useEffect, useMemo, useState } from "react";
 import { WEEK_PLAN } from "./lib/plan";
-import {
-  exportJson,
-  importJson,
-  listLogs,
-  todayKey,
-  upsertLog,
-  type DayLog,
-} from "./lib/storage";
+import { exportJson, importJson, listLogs, todayKey, upsertLog, type DayLog } from "./lib/storage";
+import { getSettings, updateSettings } from "./lib/settings";
 import { getSummary } from "./lib/stats";
 import { Line } from "react-chartjs-2";
 import {
@@ -23,25 +17,119 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
-type Tab = "today" | "plan" | "progress" | "settings";
+type Tab = "today" | "log" | "plan" | "progress" | "settings";
+
+type Metric = "weightKg" | "steps" | "calories" | "proteinG";
+
+const APP_VERSION = "0.0.1";
 
 function numberOrUndef(v: string): number | undefined {
   const n = Number(v);
   return Number.isFinite(n) ? n : undefined;
 }
 
+function MetricSheet({
+  open,
+  title,
+  unit,
+  initialValue,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  title: string;
+  unit: string;
+  initialValue?: number;
+  onClose: () => void;
+  onSave: (n?: number) => void;
+}) {
+  const [val, setVal] = useState<string>(initialValue?.toString() ?? "");
+
+  useEffect(() => {
+    if (open) setVal(initialValue?.toString() ?? "");
+  }, [open, initialValue]);
+
+  if (!open) return null;
+
+  return (
+    <div className="sheetOverlay" onClick={onClose}>
+      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="sheetHeader">
+          <div>
+            <div className="sheetTitle">{title}</div>
+            <div className="muted">Enter a number ({unit})</div>
+          </div>
+          <button className="iconBtn" onClick={onClose} aria-label="Close">
+            ✕
+          </button>
+        </div>
+
+        <div className="sheetBody">
+          <div className="sheetInputRow">
+            <input
+              className="sheetInput"
+              inputMode="decimal"
+              placeholder="0"
+              value={val}
+              onChange={(e) => setVal(e.target.value)}
+              autoFocus
+            />
+            <div className="sheetUnit">{unit}</div>
+          </div>
+
+          <div className="chips">
+            {[5, 10, 25].map((inc) => (
+              <button
+                key={inc}
+                className="chipBtn"
+                onClick={() => {
+                  const current = Number(val);
+                  const next = Number.isFinite(current) ? current + inc : inc;
+                  setVal(String(next));
+                }}
+              >
+                +{inc}
+              </button>
+            ))}
+            <button className="chipBtn" onClick={() => setVal("")}
+              >Clear</button>
+          </div>
+
+          <button
+            className="btn primary"
+            onClick={() => {
+              onSave(numberOrUndef(val));
+              onClose();
+            }}
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [tab, setTab] = useState<Tab>("today");
   const [tick, setTick] = useState(0);
 
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetMetric, setSheetMetric] = useState<Metric>("weightKg");
+
   const today = useMemo(() => todayKey(), []);
+
   const logs = useMemo(() => {
-    // tick forces reload from localStorage after save
     tick;
     return listLogs();
   }, [tick]);
 
   const todayLog: DayLog | undefined = useMemo(() => logs.find((l) => l.date === today), [logs, today]);
+
+  const settings = useMemo(() => {
+    tick;
+    return getSettings();
+  }, [tick]);
 
   const summary = useMemo(() => {
     tick;
@@ -52,11 +140,10 @@ export default function App() {
     // Seed today with a suggested plan day (simple: rotate by weekday, starting Monday as Day 1)
     if (!todayLog?.planDayId) {
       const weekday = new Date().getDay();
-      // JS: 0=Sun..6=Sat; map to our 1..7
       const dayIndex = weekday === 0 ? 6 : weekday - 1; // Mon=0..Sun=6
       const suggested = WEEK_PLAN[dayIndex]?.id;
       if (suggested) {
-        upsertLog(today, { planDayId: suggested });
+        upsertLog(today, { planDayId: suggested, completedExerciseIdx: [] });
         setTick((t) => t + 1);
       }
     }
@@ -87,7 +174,6 @@ export default function App() {
   }
 
   function setPlanDay(planDayId: string) {
-    // When switching the planned session, reset the checklist + done state for the day.
     save({ planDayId, completedExerciseIdx: [], workoutDone: false });
   }
 
@@ -107,19 +193,401 @@ export default function App() {
     save({ completedExerciseIdx: [], workoutDone: false });
   }
 
+  function openMetric(m: Metric) {
+    setSheetMetric(m);
+    setSheetOpen(true);
+  }
+
+  const sheetConfig = useMemo(() => {
+    const map: Record<Metric, { title: string; unit: string; value?: number }>= {
+      weightKg: { title: "Log weight", unit: "kg", value: todayLog?.weightKg },
+      steps: { title: "Log steps", unit: "steps", value: todayLog?.steps },
+      calories: { title: "Log calories", unit: "kcal", value: todayLog?.calories },
+      proteinG: { title: "Log protein", unit: "g", value: todayLog?.proteinG },
+    };
+    return map[sheetMetric];
+  }, [sheetMetric, todayLog]);
+
+  const dailyChecklist = useMemo(() => {
+    const items = [
+      {
+        key: "weightKg" as const,
+        title: "Weigh-in",
+        right: typeof todayLog?.weightKg === "number" ? `${todayLog?.weightKg} kg` : "Not logged",
+        sub: "Morning is best (after bathroom)",
+      },
+      {
+        key: "proteinG" as const,
+        title: "Protein",
+        right:
+          typeof todayLog?.proteinG === "number"
+            ? `${todayLog?.proteinG}/${settings.proteinTarget} g`
+            : `0/${settings.proteinTarget} g`,
+        sub: "Hit this first — makes the diet easier",
+      },
+      {
+        key: "calories" as const,
+        title: "Calories",
+        right:
+          typeof todayLog?.calories === "number"
+            ? `${todayLog?.calories}/${settings.calorieTarget} kcal`
+            : `0/${settings.calorieTarget} kcal`,
+        sub: "Stay near target (weekly average matters)",
+      },
+      {
+        key: "steps" as const,
+        title: "Steps",
+        right:
+          typeof todayLog?.steps === "number" ? `${todayLog?.steps}/${settings.stepGoal}` : `0/${settings.stepGoal}`,
+        sub: "Low-stress fat loss lever",
+      },
+    ];
+    return items;
+  }, [todayLog, settings]);
+
   return (
-    <div className="container">
-      <header className="header">
+    <div className="appShell">
+      <header className="appBar">
         <div>
-          <div className="title">Fitness Plan Tracker</div>
-          <div className="subtitle">Manu • cut phase • simple + consistent</div>
+          <div className="appTitle">
+            {tab === "today" ? "Today" : tab === "log" ? "Log" : tab === "plan" ? "Plan" : tab === "progress" ? "Progress" : "Settings"}
+          </div>
+          <div className="appSub">{today}</div>
         </div>
-        <div className="chip">{today}</div>
+        <div className="appBadge">v{APP_VERSION}</div>
       </header>
 
-      <nav className="tabs">
+      <main className="main">
+        {tab === "today" && (
+          <>
+            <section className="card">
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <div>
+                  <h2>Daily checklist</h2>
+                  <div className="muted">Tap any row to log — 1–2 taps.</div>
+                </div>
+              </div>
+
+              <ul className="metricList">
+                {dailyChecklist.map((it) => (
+                  <li key={it.key}>
+                    <button className="metricRow" onClick={() => openMetric(it.key)}>
+                      <div>
+                        <div className="metricTitle">{it.title}</div>
+                        <div className="muted">{it.sub}</div>
+                      </div>
+                      <div className="metricRight">{it.right}</div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="hint">Targets are editable in Settings.</div>
+            </section>
+
+            <section className="card">
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <div>
+                  <h2>Today’s workout</h2>
+                  <div className="muted">Checkbox each exercise when it’s done.</div>
+                </div>
+              </div>
+
+              <label className="field">
+                <span>Planned session</span>
+                <select value={todayLog?.planDayId ?? selectedPlan.id} onChange={(e) => setPlanDay(e.target.value)}>
+                  {WEEK_PLAN.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="planBox">
+                <div className="row" style={{ justifyContent: "space-between" }}>
+                  <div>
+                    <div className="planTitle">{selectedPlan.title}</div>
+                    <div className="muted">{selectedPlan.focus}</div>
+                  </div>
+                  <button className="btn" onClick={resetChecklist}>
+                    Reset
+                  </button>
+                </div>
+
+                <div className="muted" style={{ marginTop: 10 }}>
+                  {(() => {
+                    const done = (todayLog?.completedExerciseIdx ?? []).length;
+                    const total = selectedPlan.exercises.length;
+                    return `${done}/${total} completed`;
+                  })()}
+                </div>
+
+                <ul className="checklist">
+                  {selectedPlan.exercises.map((ex, i) => {
+                    const checked = (todayLog?.completedExerciseIdx ?? []).includes(i);
+                    return (
+                      <li key={i} className={checked ? "checked" : ""}>
+                        <label className="checkRow">
+                          <input type="checkbox" checked={checked} onChange={() => toggleExercise(i)} />
+                          <div className="checkBody">
+                            <div className="exName">{ex.name}</div>
+                            <div className="exMeta">
+                              {ex.sets ? <span className="pill">{ex.sets}</span> : null}
+                              {ex.notes ? <span className="muted">{ex.notes}</span> : null}
+                            </div>
+                          </div>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                <div className="row">
+                  <button
+                    className={todayLog?.workoutDone ? "btn good" : "btn"}
+                    onClick={() => {
+                      const total = selectedPlan.exercises.length;
+                      const done = (todayLog?.completedExerciseIdx ?? []).length;
+                      if (!todayLog?.workoutDone && total > 0 && done !== total) {
+                        save({ workoutDone: true, completedExerciseIdx: selectedPlan.exercises.map((_, i) => i) });
+                      } else {
+                        save({ workoutDone: !todayLog?.workoutDone });
+                      }
+                    }}
+                  >
+                    {todayLog?.workoutDone ? "Workout marked done" : "Mark workout done"}
+                  </button>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
+
+        {tab === "log" && (
+          <section className="card">
+            <h2>Quick log</h2>
+            <div className="muted">Fast entry — everything auto-saves.</div>
+
+            <div className="grid2">
+              <button className="metricCard" onClick={() => openMetric("weightKg")}>
+                <div className="metricTitle">Weight</div>
+                <div className="metricBig">{typeof todayLog?.weightKg === "number" ? `${todayLog?.weightKg} kg` : "—"}</div>
+                <div className="muted">Tap to log</div>
+              </button>
+              <button className="metricCard" onClick={() => openMetric("steps")}>
+                <div className="metricTitle">Steps</div>
+                <div className="metricBig">{typeof todayLog?.steps === "number" ? todayLog?.steps : "—"}</div>
+                <div className="muted">Goal {settings.stepGoal}</div>
+              </button>
+              <button className="metricCard" onClick={() => openMetric("calories")}>
+                <div className="metricTitle">Calories</div>
+                <div className="metricBig">{typeof todayLog?.calories === "number" ? todayLog?.calories : "—"}</div>
+                <div className="muted">Target {settings.calorieTarget}</div>
+              </button>
+              <button className="metricCard" onClick={() => openMetric("proteinG")}>
+                <div className="metricTitle">Protein</div>
+                <div className="metricBig">{typeof todayLog?.proteinG === "number" ? `${todayLog?.proteinG} g` : "—"}</div>
+                <div className="muted">Target {settings.proteinTarget} g</div>
+              </button>
+            </div>
+
+            <label className="field">
+              <span>Note</span>
+              <textarea
+                placeholder="sleep, soreness, cravings, etc."
+                value={todayLog?.note ?? ""}
+                onChange={(e) => save({ note: e.target.value })}
+              />
+            </label>
+          </section>
+        )}
+
+        {tab === "plan" && (
+          <section className="card">
+            <h2>Weekly plan</h2>
+            <div className="muted">Run this 8–12 weeks. Add weight when you hit the top reps.</div>
+            <div className="stack">
+              {WEEK_PLAN.map((d) => (
+                <div key={d.id} className="planDay">
+                  <div className="planDayHeader">
+                    <div>
+                      <div className="planTitle">{d.title}</div>
+                      <div className="muted">{d.focus}</div>
+                    </div>
+                  </div>
+                  <ul className="list">
+                    {d.exercises.map((ex, i) => (
+                      <li key={i}>
+                        <div className="exName">{ex.name}</div>
+                        <div className="exMeta">
+                          {ex.sets ? <span className="pill">{ex.sets}</span> : null}
+                          {ex.notes ? <span className="muted">{ex.notes}</span> : null}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {tab === "progress" && (
+          <section className="card">
+            <h2>Progress</h2>
+
+            <div className="kpis">
+              <div className="kpi">
+                <div className="kpiLabel">Latest weight</div>
+                <div className="kpiValue">{summary.latestWeight ?? "—"}</div>
+              </div>
+              <div className="kpi">
+                <div className="kpiLabel">Workouts (last 7d)</div>
+                <div className="kpiValue">{summary.workouts7}</div>
+              </div>
+              <div className="kpi">
+                <div className="kpiLabel">Avg steps (last 7d)</div>
+                <div className="kpiValue">{summary.avgSteps7 ?? "—"}</div>
+              </div>
+              <div className="kpi">
+                <div className="kpiLabel">Workout streak</div>
+                <div className="kpiValue">{summary.streak}</div>
+              </div>
+            </div>
+
+            <div className="chart">
+              {weightData.labels.length >= 2 ? (
+                <Line
+                  data={weightData}
+                  options={{
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { title: { display: true, text: "kg" } } },
+                  }}
+                />
+              ) : (
+                <div className="muted">Add at least 2 weight entries to see the chart.</div>
+              )}
+            </div>
+
+            <h3>Recent logs</h3>
+            <div className="table">
+              <div className="tHead">
+                <div>Date</div>
+                <div>Weight</div>
+                <div>Steps</div>
+                <div>Workout</div>
+              </div>
+              {logs
+                .slice()
+                .reverse()
+                .slice(0, 14)
+                .map((l) => (
+                  <div key={l.date} className="tRow">
+                    <div>{l.date}</div>
+                    <div>{l.weightKg ?? "—"}</div>
+                    <div>{l.steps ?? "—"}</div>
+                    <div>{l.workoutDone ? "✓" : "—"}</div>
+                  </div>
+                ))}
+            </div>
+          </section>
+        )}
+
+        {tab === "settings" && (
+          <section className="card">
+            <h2>Settings</h2>
+            <div className="muted">Targets affect the Today checklist + Progress views.</div>
+
+            <div className="grid2">
+              <label className="field">
+                <span>Step goal</span>
+                <input
+                  inputMode="numeric"
+                  value={settings.stepGoal}
+                  onChange={(e) => {
+                    updateSettings({ stepGoal: Number(e.target.value) || 0 });
+                    setTick((t) => t + 1);
+                  }}
+                />
+              </label>
+              <label className="field">
+                <span>Calorie target (kcal)</span>
+                <input
+                  inputMode="numeric"
+                  value={settings.calorieTarget}
+                  onChange={(e) => {
+                    updateSettings({ calorieTarget: Number(e.target.value) || 0 });
+                    setTick((t) => t + 1);
+                  }}
+                />
+              </label>
+              <label className="field">
+                <span>Protein target (g)</span>
+                <input
+                  inputMode="numeric"
+                  value={settings.proteinTarget}
+                  onChange={(e) => {
+                    updateSettings({ proteinTarget: Number(e.target.value) || 0 });
+                    setTick((t) => t + 1);
+                  }}
+                />
+              </label>
+            </div>
+
+            <h3>Backup</h3>
+            <div className="row">
+              <button
+                className="btn"
+                onClick={async () => {
+                  const data = exportJson();
+                  await navigator.clipboard.writeText(data);
+                  alert("Backup JSON copied to clipboard.");
+                }}
+              >
+                Copy backup JSON
+              </button>
+            </div>
+
+            <label className="field">
+              <span>Restore from backup JSON</span>
+              <textarea placeholder="Paste backup JSON here" rows={6} id="restore" />
+            </label>
+            <div className="row">
+              <button
+                className="btn danger"
+                onClick={() => {
+                  const el = document.getElementById("restore") as HTMLTextAreaElement | null;
+                  if (!el) return;
+                  try {
+                    importJson(el.value);
+                    setTick((t) => t + 1);
+                    alert("Restored.");
+                  } catch (e) {
+                    alert(e instanceof Error ? e.message : "Restore failed");
+                  }
+                }}
+              >
+                Restore (overwrites current data)
+              </button>
+            </div>
+
+            <div className="hint">Tip: add this app to your Home Screen for a native feel.</div>
+          </section>
+        )}
+      </main>
+
+      <button className="fab" onClick={() => openMetric("weightKg")} aria-label="Quick log">
+        +
+      </button>
+
+      <nav className="bottomNav">
         <button className={tab === "today" ? "active" : ""} onClick={() => setTab("today")}>
           Today
+        </button>
+        <button className={tab === "log" ? "active" : ""} onClick={() => setTab("log")}>
+          Log
         </button>
         <button className={tab === "plan" ? "active" : ""} onClick={() => setTab("plan")}>
           Plan
@@ -132,278 +600,17 @@ export default function App() {
         </button>
       </nav>
 
-      {tab === "today" && (
-        <section className="card">
-          <div className="row">
-            <div>
-              <h2>Today’s focus</h2>
-              <div className="muted">Pick the planned session and log your numbers.</div>
-            </div>
-          </div>
-
-          <label className="field">
-            <span>Planned session</span>
-            <select value={todayLog?.planDayId ?? selectedPlan.id} onChange={(e) => setPlanDay(e.target.value)}>
-              {WEEK_PLAN.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.title}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <div className="planBox">
-            <div className="row" style={{ justifyContent: "space-between" }}>
-              <div>
-                <div className="planTitle">{selectedPlan.title}</div>
-                <div className="muted">{selectedPlan.focus}</div>
-              </div>
-              <button className="btn" onClick={resetChecklist}>
-                Reset checklist
-              </button>
-            </div>
-
-            <div className="muted" style={{ marginTop: 10 }}>
-              {(() => {
-                const done = (todayLog?.completedExerciseIdx ?? []).length;
-                const total = selectedPlan.exercises.length;
-                return `${done}/${total} completed`;
-              })()}
-            </div>
-
-            <ul className="checklist">
-              {selectedPlan.exercises.map((ex, i) => {
-                const checked = (todayLog?.completedExerciseIdx ?? []).includes(i);
-                return (
-                  <li key={i} className={checked ? "checked" : ""}>
-                    <label className="checkRow">
-                      <input type="checkbox" checked={checked} onChange={() => toggleExercise(i)} />
-                      <div className="checkBody">
-                        <div className="exName">{ex.name}</div>
-                        <div className="exMeta">
-                          {ex.sets ? <span className="pill">{ex.sets}</span> : null}
-                          {ex.notes ? <span className="muted">{ex.notes}</span> : null}
-                        </div>
-                      </div>
-                    </label>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-
-          <div className="grid2">
-            <label className="field">
-              <span>Weight (kg)</span>
-              <input
-                inputMode="decimal"
-                placeholder="e.g. 86"
-                value={todayLog?.weightKg ?? ""}
-                onChange={(e) => save({ weightKg: numberOrUndef(e.target.value) })}
-              />
-            </label>
-            <label className="field">
-              <span>Steps</span>
-              <input
-                inputMode="numeric"
-                placeholder="e.g. 9000"
-                value={todayLog?.steps ?? ""}
-                onChange={(e) => save({ steps: numberOrUndef(e.target.value) })}
-              />
-            </label>
-            <label className="field">
-              <span>Calories</span>
-              <input
-                inputMode="numeric"
-                placeholder="e.g. 2100"
-                value={todayLog?.calories ?? ""}
-                onChange={(e) => save({ calories: numberOrUndef(e.target.value) })}
-              />
-            </label>
-            <label className="field">
-              <span>Protein (g)</span>
-              <input
-                inputMode="numeric"
-                placeholder="e.g. 160"
-                value={todayLog?.proteinG ?? ""}
-                onChange={(e) => save({ proteinG: numberOrUndef(e.target.value) })}
-              />
-            </label>
-          </div>
-
-          <label className="field">
-            <span>Note</span>
-            <textarea
-              placeholder="sleep, soreness, cravings, etc."
-              value={todayLog?.note ?? ""}
-              onChange={(e) => save({ note: e.target.value })}
-            />
-          </label>
-
-          <div className="row">
-            <button
-              className={todayLog?.workoutDone ? "btn good" : "btn"}
-              onClick={() => {
-                const total = selectedPlan.exercises.length;
-                const done = (todayLog?.completedExerciseIdx ?? []).length;
-                if (!todayLog?.workoutDone && total > 0 && done !== total) {
-                  // If they manually mark done, also check everything.
-                  save({ workoutDone: true, completedExerciseIdx: selectedPlan.exercises.map((_, i) => i) });
-                } else {
-                  save({ workoutDone: !todayLog?.workoutDone });
-                }
-              }}
-            >
-              {todayLog?.workoutDone ? "Workout marked done" : "Mark workout done"}
-            </button>
-          </div>
-
-          <div className="hint">
-            Targets: 8–10k steps/day • 2000–2200 kcal • 150–170g protein
-          </div>
-        </section>
-      )}
-
-      {tab === "plan" && (
-        <section className="card">
-          <h2>Weekly plan</h2>
-          <div className="muted">Run this 8–12 weeks. Add weight when you hit the top reps.</div>
-          <div className="stack">
-            {WEEK_PLAN.map((d) => (
-              <div key={d.id} className="planDay">
-                <div className="planDayHeader">
-                  <div>
-                    <div className="planTitle">{d.title}</div>
-                    <div className="muted">{d.focus}</div>
-                  </div>
-                </div>
-                <ul className="list">
-                  {d.exercises.map((ex, i) => (
-                    <li key={i}>
-                      <div className="exName">{ex.name}</div>
-                      <div className="exMeta">
-                        {ex.sets ? <span className="pill">{ex.sets}</span> : null}
-                        {ex.notes ? <span className="muted">{ex.notes}</span> : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {tab === "progress" && (
-        <section className="card">
-          <h2>Progress</h2>
-
-          <div className="kpis">
-            <div className="kpi">
-              <div className="kpiLabel">Latest weight</div>
-              <div className="kpiValue">{summary.latestWeight ?? "—"}</div>
-            </div>
-            <div className="kpi">
-              <div className="kpiLabel">Workouts (last 7d)</div>
-              <div className="kpiValue">{summary.workouts7}</div>
-            </div>
-            <div className="kpi">
-              <div className="kpiLabel">Avg steps (last 7d)</div>
-              <div className="kpiValue">{summary.avgSteps7 ?? "—"}</div>
-            </div>
-            <div className="kpi">
-              <div className="kpiLabel">Workout streak</div>
-              <div className="kpiValue">{summary.streak}</div>
-            </div>
-          </div>
-
-          <div className="chart">
-            {weightData.labels.length >= 2 ? (
-              <Line
-                data={weightData}
-                options={{
-                  responsive: true,
-                  plugins: { legend: { display: false } },
-                  scales: { y: { title: { display: true, text: "kg" } } },
-                }}
-              />
-            ) : (
-              <div className="muted">Add at least 2 weight entries to see the chart.</div>
-            )}
-          </div>
-
-          <h3>Recent logs</h3>
-          <div className="table">
-            <div className="tHead">
-              <div>Date</div>
-              <div>Weight</div>
-              <div>Steps</div>
-              <div>Workout</div>
-            </div>
-            {logs
-              .slice()
-              .reverse()
-              .slice(0, 14)
-              .map((l) => (
-                <div key={l.date} className="tRow">
-                  <div>{l.date}</div>
-                  <div>{l.weightKg ?? "—"}</div>
-                  <div>{l.steps ?? "—"}</div>
-                  <div>{l.workoutDone ? "✓" : "—"}</div>
-                </div>
-              ))}
-          </div>
-        </section>
-      )}
-
-      {tab === "settings" && (
-        <section className="card">
-          <h2>Settings / Backup</h2>
-          <div className="muted">Your data is stored on your phone/computer (localStorage).</div>
-
-          <div className="row">
-            <button
-              className="btn"
-              onClick={async () => {
-                const data = exportJson();
-                await navigator.clipboard.writeText(data);
-                alert("Backup JSON copied to clipboard.");
-              }}
-            >
-              Copy backup JSON
-            </button>
-          </div>
-
-          <label className="field">
-            <span>Restore from backup JSON</span>
-            <textarea placeholder="Paste backup JSON here" rows={6} id="restore" />
-          </label>
-          <div className="row">
-            <button
-              className="btn danger"
-              onClick={() => {
-                const el = document.getElementById("restore") as HTMLTextAreaElement | null;
-                if (!el) return;
-                try {
-                  importJson(el.value);
-                  setTick((t) => t + 1);
-                  alert("Restored.");
-                } catch (e) {
-                  alert(e instanceof Error ? e.message : "Restore failed");
-                }
-              }}
-            >
-              Restore (overwrites current data)
-            </button>
-          </div>
-
-          <div className="hint">
-            Tip: on your phone, open the app in the browser and use “Add to Home Screen”.
-          </div>
-        </section>
-      )}
-
-      <footer className="footer">Built for Manu • Lacose</footer>
+      <MetricSheet
+        open={sheetOpen}
+        title={sheetConfig.title}
+        unit={sheetConfig.unit}
+        initialValue={sheetConfig.value}
+        onClose={() => setSheetOpen(false)}
+        onSave={(n) => {
+          const patch: Partial<DayLog> = { [sheetMetric]: n } as Partial<DayLog>;
+          save(patch);
+        }}
+      />
     </div>
   );
 }

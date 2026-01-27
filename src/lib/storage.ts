@@ -13,9 +13,16 @@ export type DayLog = {
   note?: string;
 };
 
+export type Settings = {
+  stepGoal: number;
+  calorieTarget: number;
+  proteinTarget: number;
+};
+
 export type AppState = {
   version: 1;
   logsByDate: Record<string, DayLog>;
+  settings: Settings;
 };
 
 const STORAGE_KEY = "lacose.fitnessPlanTracker.v1";
@@ -26,15 +33,29 @@ export function todayKey(d = new Date()): string {
   return iso;
 }
 
+const DEFAULT_SETTINGS: Settings = {
+  stepGoal: 10000,
+  calorieTarget: 2100,
+  proteinTarget: 160,
+};
+
 export function loadState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { version: 1, logsByDate: {} };
-    const parsed = JSON.parse(raw) as AppState;
-    if (!parsed || parsed.version !== 1 || !parsed.logsByDate) return { version: 1, logsByDate: {} };
-    return parsed;
+    if (!raw) return { version: 1, logsByDate: {}, settings: DEFAULT_SETTINGS };
+
+    const parsed = JSON.parse(raw) as Partial<AppState>;
+    if (!parsed || parsed.version !== 1 || !parsed.logsByDate) {
+      return { version: 1, logsByDate: {}, settings: DEFAULT_SETTINGS };
+    }
+
+    return {
+      version: 1,
+      logsByDate: parsed.logsByDate,
+      settings: parsed.settings ?? DEFAULT_SETTINGS,
+    };
   } catch {
-    return { version: 1, logsByDate: {} };
+    return { version: 1, logsByDate: {}, settings: DEFAULT_SETTINGS };
   }
 }
 
