@@ -28,16 +28,19 @@ body{
   color:var(--text);
 }
 
-/* subtle noise overlay for “Apple-ish” depth */
+/* subtle noise overlay for “Apple-ish” depth
+   NOTE: iOS screenshots can show tiling seams; keep this very subtle.
+*/
 body:before{
   content:"";
   position:fixed;
   inset:0;
   pointer-events:none;
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.20'/%3E%3C/svg%3E");
-  opacity:0.08;
-  mix-blend-mode: overlay;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  opacity:0.045;
+  mix-blend-mode: soft-light;
 }
 
 h2{margin:0 0 10px}
@@ -96,12 +99,14 @@ html, body { height: 100%; }
   border-bottom:1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  /* iOS PWA safe-area */
+  padding-top: env(safe-area-inset-top);
 }
 
 .appBarInner{
   max-width:920px;
   margin:0 auto;
-  padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+  padding:14px 16px;
   display:flex;
   justify-content:space-between;
   align-items:center;
