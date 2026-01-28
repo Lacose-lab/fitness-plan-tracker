@@ -1,132 +1,74 @@
 :root{
   --bg:#0b0f1a;
+  --panel:#111827;
+  --panel-2:#0f172a;
   --text:#eaf0ff;
   --muted:#9db0d7;
   --accent:#4f8cff;
   --good:#1dbf73;
   --danger:#ff4d4d;
+  --border: rgba(255,255,255,0.10);
 
-  /* Liquid glass tokens */
-  --glass: rgba(18, 26, 43, 0.55);
-  --glass-strong: rgba(18, 26, 43, 0.78);
-  --glass-border: rgba(255,255,255,0.12);
-  --glass-border-strong: rgba(255,255,255,0.18);
-  --shadow: 0 12px 40px rgba(0,0,0,0.35);
-}
-
-*{box-sizing:border-box}
-
-body{
-  margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  background:
-    radial-gradient(900px 520px at 15% -10%, rgba(79,140,255,0.38), transparent 60%),
-    radial-gradient(700px 420px at 100% 10%, rgba(29,191,115,0.18), transparent 55%),
-    radial-gradient(900px 600px at 40% 110%, rgba(255,255,255,0.06), transparent 55%),
-    linear-gradient(180deg, rgba(255,255,255,0.03), transparent 30%),
-    var(--bg);
-  color:var(--text);
-}
-
-/* subtle noise overlay for “Apple-ish” depth
-   NOTE: iOS screenshots can show tiling seams; keep this very subtle.
-*/
-body:before{
-  content:"";
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  opacity:0.045;
-  mix-blend-mode: soft-light;
-}
-
-h2{margin:0 0 10px}
-h3{margin:18px 0 8px}
-
-.muted{color:var(--muted)}
-
-/* Shell */
-.appShell{
-  height: 100svh;
-  height: 100dvh;
-  display:flex;
-  flex-direction:column;
-  /* background stays on body; appShell is just the viewport layout */
-}
-
-html, body { height: 100%; }
-
-/* prevent double-scroll in iOS PWA; main becomes the scroll container */
-body{ overflow:hidden; }
-
-/* Generic glass surface */
-.glass{
-  position: relative;
-  background: var(--glass);
-  border:1px solid var(--glass-border);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: var(--shadow);
-  overflow:hidden;
-}
-
-/* glass sheen */
-.glass::before{
-  content:"";
-  position:absolute;
-  inset:-40% -40% auto -40%;
-  height:120%;
-  background: linear-gradient(115deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 35%, transparent 55%);
-  transform: translateX(-35%) rotate(8deg);
-  opacity:0.8;
-  pointer-events:none;
-}
-
-/* a tiny animated shimmer on supported devices */
-@media (prefers-reduced-motion: no-preference){
-  .glass::before{
-    animation: sheen 7s ease-in-out infinite;
-  }
-  @keyframes sheen{
-    0%,100%{ transform: translateX(-35%) rotate(8deg); opacity:0.75; }
-    50%{ transform: translateX(15%) rotate(8deg); opacity:0.55; }
-  }
-}
-
-/* AppBar (centered) */
-:root{
   --safe-top: env(safe-area-inset-top);
   --safe-top-legacy: constant(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
   --safe-bottom-legacy: constant(safe-area-inset-bottom);
+
+  --appbar-height: 64px;
+  --bottomnav-height: 74px;
+}
+
+*{box-sizing:border-box}
+
+html, body{ height:100%; }
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  background:
+    radial-gradient(900px 520px at 15% -10%, rgba(79,140,255,0.25), transparent 60%),
+    radial-gradient(700px 420px at 100% 10%, rgba(29,191,115,0.12), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  overflow:hidden;
+}
+
+h2{margin:0 0 10px}
+h3{margin:18px 0 8px}
+.muted{color:var(--muted)}
+
+.appShell{
+  height:100svh;
+  height:100dvh;
+  display:flex;
+  flex-direction:column;
 }
 
 .appBar{
-  position:relative;
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
   z-index:50;
-  background: rgba(11,15,26,0.55);
-  border-bottom:1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  /* iOS PWA safe-area */
-  padding-top: max(var(--safe-top), var(--safe-top-legacy), 12px);
+  background: rgba(11,15,26,0.8);
+  border-bottom:1px solid var(--border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding-top: max(var(--safe-top), var(--safe-top-legacy), 10px);
 }
 
 .appBarInner{
   max-width:920px;
   margin:0 auto;
-  padding:8px 16px;
+  padding:10px 16px 12px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  min-height:36px;
+  min-height: calc(var(--appbar-height) - 22px);
 }
 
-.appTitle{font-weight:950;font-size:17px;letter-spacing:0.2px; line-height:1.1}
-/* .appSub removed (compact header) */
+.appTitle{font-weight:900;font-size:18px;letter-spacing:0.2px}
+.appSubtitle{color:var(--muted);font-size:12px;margin-top:2px}
+
 .appBadge{
   border:1px solid rgba(255,255,255,0.14);
   background: rgba(255,255,255,0.06);
@@ -135,6 +77,8 @@ body{ overflow:hidden; }
   color:var(--muted);
   font-size:11px;
 }
+
+.appBarSpacer{height: calc(var(--appbar-height) + max(var(--safe-top), var(--safe-top-legacy), 10px));}
 
 .main{
   max-width:920px;
@@ -147,51 +91,36 @@ body{ overflow:hidden; }
   flex:1;
   overflow-y:auto;
   -webkit-overflow-scrolling: touch;
-  /* bottom nav is in-flow now, so avoid adding extra phantom space */
-  padding-bottom: 16px;
+  padding-bottom: calc(var(--bottomnav-height) + max(var(--safe-bottom), var(--safe-bottom-legacy), 0px));
 }
-
-/* Hero */
-.hero{
-  border-radius:24px;
-  padding:16px;
-  display:flex;
-  gap:14px;
-  align-items:center;
-}
-.heroTitle{font-weight:950;font-size:18px}
-.heroSub{color:var(--muted);font-size:12px;margin-top:2px}
-.heroStats{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px;margin-top:10px}
-.heroStat{border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:10px;background:rgba(11,15,26,0.18)}
-.heroStatLabel{color:var(--muted);font-size:11px;font-weight:800}
-.heroStatValue{margin-top:3px;font-size:14px;font-weight:950}
-
-.ringWrap{position:relative;width:72px;height:72px;flex:0 0 auto}
-.ring{
-  width:72px;height:72px;border-radius:999px;
-  background: conic-gradient(var(--accent) var(--p), rgba(255,255,255,0.12) 0);
-  display:grid;place-items:center;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-}
-.ring::after{
-  content:"";
-  width:58px;height:58px;border-radius:999px;
-  background: rgba(11,15,26,0.55);
-  border:1px solid rgba(255,255,255,0.10);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-.ringText{position:absolute;inset:0;display:grid;place-items:center;font-weight:950;font-size:14px}
 
 .card{
-  background: var(--glass-strong);
-  border:1px solid var(--glass-border);
-  border-radius:20px;
+  background: var(--panel);
+  border:1px solid var(--border);
+  border-radius:18px;
   padding:16px;
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
 }
+
+.heroCard{background: linear-gradient(180deg, rgba(79,140,255,0.08), rgba(17,24,39,0.95));}
+
+.heroTop{display:flex;gap:12px;justify-content:space-between;align-items:center}
+.heroTitle{font-weight:900;font-size:18px}
+
+.scoreRing{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+}
+.scoreValue{font-weight:950;font-size:22px;color:var(--accent)}
+.scoreLabel{font-size:11px;color:var(--muted)}
+
+.progressStack{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.progressRow{display:grid;grid-template-columns:90px 1fr 70px;gap:10px;align-items:center}
+.progressLabel{font-size:12px;color:var(--muted);font-weight:700}
+.progressTrack{height:8px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden}
+.progressFill{height:100%;background:var(--accent);border-radius:999px}
+.progressValue{font-size:12px;color:var(--muted);text-align:right}
 
 .row{display:flex;gap:10px;align-items:center;justify-content:flex-start;margin-top:10px;flex-wrap:wrap}
 
@@ -199,7 +128,7 @@ body{ overflow:hidden; }
 .field span{color:var(--muted);font-size:13px}
 .field input,.field select,.field textarea{
   padding:10px 12px;
-  border-radius:14px;
+  border-radius:12px;
   border:1px solid rgba(255,255,255,0.12);
   background: rgba(11,15,26,0.35);
   color:var(--text);
@@ -215,7 +144,7 @@ body{ overflow:hidden; }
   border:1px solid rgba(79,140,255,0.42);
   color:var(--text);
   padding:10px 12px;
-  border-radius:14px;
+  border-radius:12px;
   cursor:pointer;
 }
 .btn.good{background:rgba(29,191,115,0.16);border-color:rgba(29,191,115,0.5)}
@@ -228,10 +157,9 @@ body{ overflow:hidden; }
   color:var(--muted);
   width:36px;
   height:36px;
-  border-radius:14px;
+  border-radius:12px;
 }
 
-/* Today checklist */
 .metricList{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
 .metricRow{
   width:100%;
@@ -241,17 +169,18 @@ body{ overflow:hidden; }
   align-items:center;
   gap:12px;
   padding:12px;
-  border-radius:18px;
+  border-radius:14px;
   color:var(--text);
   cursor:pointer;
+  border:1px solid rgba(255,255,255,0.08);
+  background: var(--panel-2);
   transition: transform .12s ease, border-color .2s ease, background .2s ease;
 }
 .metricRow:active{ transform: scale(0.985); }
 
 .metricLeft{display:flex;align-items:center;gap:12px}
-
-.metricTitle{font-weight:950}
-.metricRight{font-weight:950;color:var(--text)}
+.metricTitle{font-weight:800}
+.metricRight{font-weight:900;color:var(--text)}
 
 .icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;color:rgba(234,240,255,0.9)}
 .icon svg{width:22px;height:22px}
@@ -269,60 +198,58 @@ body{ overflow:hidden; }
 .metricCard{
   text-align:left;
   border:1px solid rgba(255,255,255,0.12);
-  border-radius:18px;
+  border-radius:16px;
   padding:14px;
-  background: rgba(11,15,26,0.3);
+  background: var(--panel-2);
   color:var(--text);
   cursor:pointer;
 }
-.metricBig{font-size:22px;font-weight:950;margin-top:8px}
+.metricBig{font-size:22px;font-weight:900;margin-top:8px}
 
-/* Workout */
-.planBox{margin-top:12px;border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:12px;background:rgba(11,15,26,0.25)}
+.planBox{margin-top:12px;border:1px solid rgba(255,255,255,0.10);border-radius:16px;padding:12px;background:rgba(11,15,26,0.25)}
 .planTitle{font-weight:900}
 
 .checklist{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
 .checkRow{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
 .checkRow input{width:20px;height:20px;margin-top:2px;accent-color: var(--accent)}
 .checkBody{flex:1}
-.checklist li{border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:10px 12px;background:rgba(11,15,26,0.22)}
+.checklist li{border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:10px 12px;background:rgba(11,15,26,0.22)}
 .checklist li.checked{background:rgba(29,191,115,0.10);border-color:rgba(29,191,115,0.28)}
 .checklist li.checked .exName{opacity:0.88;text-decoration:line-through}
-.exName{font-weight:850}
+.exName{font-weight:800}
 .exMeta{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .pill{display:inline-flex;border:1px solid rgba(255,255,255,0.10);border-radius:999px;padding:2px 10px;color:var(--muted);font-size:12px}
 
-/* Plan */
 .stack{display:flex;flex-direction:column;gap:14px;margin-top:12px}
-.planDay{border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:12px;background:rgba(11,15,26,0.22)}
+.planDay{border:1px solid rgba(255,255,255,0.10);border-radius:16px;padding:12px;background:rgba(11,15,26,0.22)}
 .planDayHeader{display:flex;justify-content:space-between;gap:10px}
 .list{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
 
-/* Progress */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
 @media (max-width:850px){.kpis{grid-template-columns:repeat(2,1fr)}}
-.kpi{border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:10px;background:rgba(11,15,26,0.22)}
+.kpi{border:1px solid rgba(255,255,255,0.10);border-radius:16px;padding:10px;background:rgba(11,15,26,0.22)}
 .kpiLabel{color:var(--muted);font-size:12px}
-.kpiValue{font-weight:950;font-size:18px;margin-top:4px}
-.chart{border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:12px;background:rgba(11,15,26,0.22)}
+.kpiValue{font-weight:900;font-size:18px;margin-top:4px}
+.chart{border:1px solid rgba(255,255,255,0.10);border-radius:16px;padding:12px;background:rgba(11,15,26,0.22)}
 
-.table{border:1px solid rgba(255,255,255,0.10);border-radius:18px;overflow:hidden}
+.table{border:1px solid rgba(255,255,255,0.10);border-radius:16px;overflow:hidden}
 .tHead,.tRow{display:grid;grid-template-columns:1.1fr 0.8fr 0.8fr 0.6fr;gap:8px;padding:10px 12px}
 .tHead{background:rgba(79,140,255,0.10);color:var(--muted);font-size:12px}
 .tRow{border-top:1px solid rgba(255,255,255,0.08)}
 
 .hint{margin-top:12px;color:var(--muted);font-size:13px}
 
-/* Bottom nav (centered, glass) */
 .bottomNav{
-  position:relative;
-  z-index:20;
-  background: rgba(11,15,26,0.58);
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:40;
+  background: rgba(11,15,26,0.9);
   border-top:1px solid rgba(255,255,255,0.10);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  padding:10px;
-  padding-bottom: max(10px, var(--safe-bottom), var(--safe-bottom-legacy));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding:10px 10px calc(10px + max(var(--safe-bottom), var(--safe-bottom-legacy), 0px));
 }
 
 .bottomNavInner{
@@ -338,7 +265,7 @@ body{ overflow:hidden; }
   color:var(--muted);
   border:1px solid rgba(255,255,255,0.10);
   padding:10px 8px;
-  border-radius:18px;
+  border-radius:14px;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -355,53 +282,51 @@ body{ overflow:hidden; }
   background:rgba(79,140,255,0.12);
 }
 
-/* FAB */
 .fab{
   position:fixed;
   right:16px;
-  bottom: calc(82px + max(var(--safe-bottom), var(--safe-bottom-legacy), 0px));
+  bottom: calc(var(--bottomnav-height) + max(var(--safe-bottom), var(--safe-bottom-legacy), 0px));
   width:54px;
   height:54px;
-  border-radius:18px;
+  border-radius:16px;
   border:1px solid rgba(79,140,255,0.5);
   background: rgba(79,140,255,0.18);
   box-shadow: 0 12px 30px rgba(0,0,0,0.35);
   color:var(--text);
   font-size:28px;
   font-weight:950;
-  z-index:25;
+  z-index:45;
 }
 
-/* Sheet */
 .sheetOverlay{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,0.55);
-  z-index:50;
+  z-index:60;
   display:flex;
   align-items:flex-end;
   justify-content:center;
 }
 .sheet{
   width:min(720px, 100%);
-  background: rgba(18,26,43,0.72);
+  background: rgba(18,26,43,0.95);
   border:1px solid rgba(255,255,255,0.14);
-  border-radius:22px 22px 0 0;
+  border-radius:18px 18px 0 0;
   padding:14px;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
 .sheetHeader{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.sheetTitle{font-weight:950;font-size:16px}
+.sheetTitle{font-weight:900;font-size:16px}
 .sheetBody{margin-top:12px;display:flex;flex-direction:column;gap:12px}
 
 .sheetInputRow{display:flex;gap:10px;align-items:center}
 .sheetInput{
   flex:1;
   font-size:28px;
-  font-weight:950;
+  font-weight:900;
   padding:12px 14px;
-  border-radius:18px;
+  border-radius:14px;
   border:1px solid rgba(255,255,255,0.12);
   background:rgba(11,15,26,0.32);
   color:var(--text);

@@ -9,8 +9,15 @@ export default defineConfig({
   fullyParallel: true,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:4173',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:4173',
     trace: 'on-first-retry',
+  },
+  webServer: {
+    // Ensure E2E always has a server (works with qa-fleet runner).
+    command: 'npm run build && npm run preview:ci',
+    url: 'http://localhost:4173',
+    reuseExistingServer: true,
+    timeout: 120_000,
   },
   projects: [
     {

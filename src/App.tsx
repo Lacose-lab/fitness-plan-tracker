@@ -22,11 +22,30 @@ type Tab = "today" | "log" | "plan" | "progress" | "settings";
 
 type Metric = "weightKg" | "steps" | "calories" | "proteinG";
 
-const APP_VERSION = "0.1.1";
+const APP_VERSION = "0.2.0";
 
 function numberOrUndef(v: string): number | undefined {
   const n = Number(v);
   return Number.isFinite(n) ? n : undefined;
+}
+
+function formatDate(d: Date) {
+  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+}
+
+function ProgressBar({ label, value, max, suffix }: { label: string; value: number; max: number; suffix?: string }) {
+  const pct = Math.min(100, Math.round((value / Math.max(1, max)) * 100));
+  return (
+    <div className="progressRow">
+      <div className="progressLabel">{label}</div>
+      <div className="progressTrack">
+        <div className="progressFill" style={{ width: `${pct}%` }} />
+      </div>
+      <div className="progressValue">
+        {value}/{max}{suffix ?? ""}
+      </div>
+    </div>
+  );
 }
 
 function MetricSheet({
@@ -47,6 +66,8 @@ function MetricSheet({
   const [val, setVal] = useState<string>(initialValue?.toString() ?? "");
 
   useEffect(() => {
+    // Reset input when opening the sheet (simple UX).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (open) setVal(initialValue?.toString() ?? "");
   }, [open, initialValue]);
 
@@ -92,8 +113,7 @@ function MetricSheet({
                 +{inc}
               </button>
             ))}
-            <button className="chipBtn" onClick={() => setVal("")}
-              >Clear</button>
+            <button className="chipBtn" onClick={() => setVal("")}>Clear</button>
           </div>
 
           <button
@@ -119,26 +139,12 @@ export default function App() {
   const [sheetMetric, setSheetMetric] = useState<Metric>("weightKg");
 
   const today = useMemo(() => todayKey(), []);
-
-  const logs = useMemo(() => {
-    tick;
-    return listLogs();
-  }, [tick]);
-
+  const logs = useMemo(() => listLogs(), [tick]);
   const todayLog: DayLog | undefined = useMemo(() => logs.find((l) => l.date === today), [logs, today]);
-
-  const settings = useMemo(() => {
-    tick;
-    return getSettings();
-  }, [tick]);
-
-  const summary = useMemo(() => {
-    tick;
-    return getSummary();
-  }, [tick]);
+  const settings = useMemo(() => getSettings(), [tick]);
+  const summary = useMemo(() => getSummary(), [tick]);
 
   useEffect(() => {
-    // Seed today with a suggested plan day (simple: rotate by weekday, starting Monday as Day 1)
     if (!todayLog?.planDayId) {
       const weekday = new Date().getDay();
       const dayIndex = weekday === 0 ? 6 : weekday - 1; // Mon=0..Sun=6
@@ -200,7 +206,7 @@ export default function App() {
   }
 
   const sheetConfig = useMemo(() => {
-    const map: Record<Metric, { title: string; unit: string; value?: number }>= {
+    const map: Record<Metric, { title: string; unit: string; value?: number }> = {
       weightKg: { title: "Log weight", unit: "kg", value: todayLog?.weightKg },
       steps: { title: "Log steps", unit: "steps", value: todayLog?.steps },
       calories: { title: "Log calories", unit: "kcal", value: todayLog?.calories },
@@ -213,7 +219,7 @@ export default function App() {
     const items = [
       {
         key: "weightKg" as const,
-        title: "Weigh-in",
+        title: "Weigh‑in",
         right: typeof todayLog?.weightKg === "number" ? `${todayLog?.weightKg} kg` : "Not logged",
         sub: "Morning is best (after bathroom)",
       },
@@ -240,11 +246,23 @@ export default function App() {
         title: "Steps",
         right:
           typeof todayLog?.steps === "number" ? `${todayLog?.steps}/${settings.stepGoal}` : `0/${settings.stepGoal}`,
-        sub: "Low-stress fat loss lever",
+        sub: "Low‑stress fat loss lever",
       },
     ];
     return items;
   }, [todayLog, settings]);
+
+  const scorePct = useMemo(() => {
+    const proteinRatio = Math.min(1, (todayLog?.proteinG ?? 0) / Math.max(1, settings.proteinTarget));
+    const stepsRatio = Math.min(1, (todayLog?.steps ?? 0) / Math.max(1, settings.stepGoal));
+    const workoutRatio = Math.min(
+      1,
+      (todayLog?.completedExerciseIdx?.length ?? 0) / Math.max(1, selectedPlan.exercises.length)
+    );
+    const weightDone = typeof todayLog?.weightKg === "number" ? 1 : 0;
+    const score = (proteinRatio + stepsRatio + workoutRatio + weightDone) / 4;
+    return Math.round(score * 100);
+  }, [todayLog, settings, selectedPlan.exercises.length]);
 
   const metricIcon = (m: Metric) => {
     switch (m) {
@@ -282,88 +300,60 @@ export default function App() {
       <header className="appBar">
         <div className="appBarInner">
           <div>
-            <div className="appTitle">
-              {tab === "today"
-                ? "Today"
-                : tab === "log"
-                  ? "Log"
-                  : tab === "plan"
-                    ? "Plan"
-                    : tab === "progress"
-                      ? "Progress"
-                      : "Settings"}
-            </div>
-            {/* date moved to content for compact header */}
+            <div className="appTitle">Fitness Plan</div>
+            <div className="appSubtitle">{formatDate(new Date())}</div>
           </div>
           <div className="appBadge">v{APP_VERSION}</div>
         </div>
       </header>
+      <div className="appBarSpacer" aria-hidden />
 
       <main className="main">
         {tab === "today" && (
           <>
-            {(() => {
-              const proteinRatio = Math.min(1, (todayLog?.proteinG ?? 0) / Math.max(1, settings.proteinTarget));
-              const stepsRatio = Math.min(1, (todayLog?.steps ?? 0) / Math.max(1, settings.stepGoal));
-              const workoutRatio = Math.min(
-                1,
-                (todayLog?.completedExerciseIdx?.length ?? 0) / Math.max(1, selectedPlan.exercises.length)
-              );
-              const weightDone = typeof todayLog?.weightKg === "number" ? 1 : 0;
-              const score = (proteinRatio + stepsRatio + workoutRatio + weightDone) / 4;
-              const pct = Math.round(score * 100);
+            <section className="card heroCard">
+              <div className="heroTop">
+                <div>
+                  <div className="heroTitle">Today</div>
+                  <div className="muted">Score reflects consistency, not perfection.</div>
+                </div>
+                <div className="scoreRing">
+                  <div className="scoreValue">{scorePct}%</div>
+                  <div className="scoreLabel">Daily score</div>
+                </div>
+              </div>
 
-              return (
-                <section className="hero glass">
-                  <div className="ringWrap">
-                    <div className="ring" style={{ ["--p" as never]: `${pct}%` } as never} />
-                    <div className="ringText">{pct}%</div>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div className="heroTitle">Today</div>
-                    <div className="heroSub">One screen. Stay consistent.</div>
+              <div className="progressStack">
+                <ProgressBar label="Protein" value={todayLog?.proteinG ?? 0} max={settings.proteinTarget} suffix=" g" />
+                <ProgressBar label="Steps" value={todayLog?.steps ?? 0} max={settings.stepGoal} />
+                <ProgressBar
+                  label="Workout"
+                  value={todayLog?.completedExerciseIdx?.length ?? 0}
+                  max={Math.max(1, selectedPlan.exercises.length)}
+                />
+                <ProgressBar label="Weight" value={typeof todayLog?.weightKg === "number" ? 1 : 0} max={1} />
+              </div>
 
-                    <div className="heroStats">
-                      <div className="heroStat">
-                        <div className="heroStatLabel">Protein</div>
-                        <div className="heroStatValue">
-                          {(todayLog?.proteinG ?? 0)}/{settings.proteinTarget} g
-                        </div>
-                      </div>
-                      <div className="heroStat">
-                        <div className="heroStatLabel">Steps</div>
-                        <div className="heroStatValue">
-                          {(todayLog?.steps ?? 0)}/{settings.stepGoal}
-                        </div>
-                      </div>
-                      <div className="heroStat">
-                        <div className="heroStatLabel">Workout</div>
-                        <div className="heroStatValue">
-                          {(todayLog?.completedExerciseIdx?.length ?? 0)}/{selectedPlan.exercises.length} done
-                        </div>
-                      </div>
-                      <div className="heroStat">
-                        <div className="heroStatLabel">Weight</div>
-                        <div className="heroStatValue">{typeof todayLog?.weightKg === "number" ? `${todayLog.weightKg} kg` : "—"}</div>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-              );
-            })()}
+              <div className="quickActions">
+                <button className="pillBtn" onClick={() => openMetric("weightKg")}>Log weight</button>
+                <button className="pillBtn" onClick={() => openMetric("steps")}>Add steps</button>
+                <button className="pillBtn" onClick={() => openMetric("calories")}>Add calories</button>
+                <button className="pillBtn" onClick={() => openMetric("proteinG")}>Add protein</button>
+              </div>
+            </section>
 
             <section className="card">
               <div className="row" style={{ justifyContent: "space-between" }}>
                 <div>
                   <h2>Daily checklist</h2>
-                  <div className="muted">Tap any row to log — 1–2 taps.</div>
+                  <div className="muted">Tap a row to log — 1–2 taps.</div>
                 </div>
               </div>
 
               <ul className="metricList">
                 {dailyChecklist.map((it) => (
                   <li key={it.key}>
-                    <button className="metricRow glass" onClick={() => openMetric(it.key)}>
+                    <button className="metricRow" onClick={() => openMetric(it.key)}>
                       <div className="metricLeft">
                         {metricIcon(it.key)}
                         <div>
@@ -376,22 +366,13 @@ export default function App() {
                   </li>
                 ))}
               </ul>
-
-              <div className="quickActions">
-                <button className="pillBtn" onClick={() => openMetric("weightKg")}>Log weight</button>
-                <button className="pillBtn" onClick={() => openMetric("steps")}>Add steps</button>
-                <button className="pillBtn" onClick={() => openMetric("calories")}>Add calories</button>
-                <button className="pillBtn" onClick={() => openMetric("proteinG")}>Add protein</button>
-              </div>
-
-              <div className="hint">Targets are editable in Settings.</div>
             </section>
 
             <section className="card">
               <div className="row" style={{ justifyContent: "space-between" }}>
                 <div>
                   <h2>Today’s workout</h2>
-                  <div className="muted">Checkbox each exercise when it’s done.</div>
+                  <div className="muted">Check off each exercise when it’s done.</div>
                 </div>
               </div>
 
@@ -469,25 +450,25 @@ export default function App() {
         {tab === "log" && (
           <section className="card">
             <h2>Quick log</h2>
-            <div className="muted">Fast entry — everything auto-saves.</div>
+            <div className="muted">Fast entry — everything auto‑saves.</div>
 
             <div className="grid2">
-              <button className="metricCard" onClick={() => openMetric("weightKg")}>
+              <button className="metricCard" onClick={() => openMetric("weightKg")}> 
                 <div className="metricTitle">Weight</div>
                 <div className="metricBig">{typeof todayLog?.weightKg === "number" ? `${todayLog?.weightKg} kg` : "—"}</div>
                 <div className="muted">Tap to log</div>
               </button>
-              <button className="metricCard" onClick={() => openMetric("steps")}>
+              <button className="metricCard" onClick={() => openMetric("steps")}> 
                 <div className="metricTitle">Steps</div>
                 <div className="metricBig">{typeof todayLog?.steps === "number" ? todayLog?.steps : "—"}</div>
                 <div className="muted">Goal {settings.stepGoal}</div>
               </button>
-              <button className="metricCard" onClick={() => openMetric("calories")}>
+              <button className="metricCard" onClick={() => openMetric("calories")}> 
                 <div className="metricTitle">Calories</div>
                 <div className="metricBig">{typeof todayLog?.calories === "number" ? todayLog?.calories : "—"}</div>
                 <div className="muted">Target {settings.calorieTarget}</div>
               </button>
-              <button className="metricCard" onClick={() => openMetric("proteinG")}>
+              <button className="metricCard" onClick={() => openMetric("proteinG")}> 
                 <div className="metricTitle">Protein</div>
                 <div className="metricBig">{typeof todayLog?.proteinG === "number" ? `${todayLog?.proteinG} g` : "—"}</div>
                 <div className="muted">Target {settings.proteinTarget} g</div>
