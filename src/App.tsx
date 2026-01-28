@@ -306,7 +306,6 @@ export default function App() {
           <div className="appBadge">v{APP_VERSION}</div>
         </div>
       </header>
-      <div className="appBarSpacer" aria-hidden />
 
       <main className="main">
         {tab === "today" && (

@@ -10,9 +10,7 @@ test.describe('UI smoke + safe-area', () => {
     await gotoApp(page)
 
     const appBar = page.locator('.appBar')
-    const spacer = page.locator('.appBarSpacer')
     await expect(appBar).toBeVisible()
-    await expect(spacer).toBeVisible()
 
     const barBox = await appBar.boundingBox()
     expect(barBox).not.toBeNull()
@@ -20,10 +18,6 @@ test.describe('UI smoke + safe-area', () => {
 
     const paddingTop = await appBar.evaluate((el) => getComputedStyle(el).paddingTop)
     expect(parseFloat(paddingTop)).toBeGreaterThanOrEqual(8)
-
-    const spacerBox = await spacer.boundingBox()
-    expect(spacerBox).not.toBeNull()
-    expect(spacerBox!.height).toBeGreaterThanOrEqual(barBox!.height - 2)
 
     const firstCard = page.locator('.main .card').first()
     await expect(firstCard).toBeVisible()
