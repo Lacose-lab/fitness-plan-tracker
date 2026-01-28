@@ -22,7 +22,9 @@ type Tab = "today" | "log" | "plan" | "progress" | "settings";
 
 type Metric = "weightKg" | "steps" | "calories" | "proteinG";
 
-const APP_VERSION = "0.2.0";
+type Range = "today" | "week" | "month";
+
+const APP_VERSION = "0.2.1";
 
 function numberOrUndef(v: string): number | undefined {
   const n = Number(v);
@@ -137,6 +139,7 @@ export default function App() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetMetric, setSheetMetric] = useState<Metric>("weightKg");
+  const [range, setRange] = useState<Range>("today");
 
   const today = useMemo(() => todayKey(), []);
   const logs = useMemo(() => listLogs(), [tick]);
@@ -173,6 +176,13 @@ export default function App() {
         },
       ],
     };
+  }, [logs]);
+
+  const recentLogs = useMemo(() => {
+    return logs
+      .slice()
+      .reverse()
+      .slice(0, 4);
   }, [logs]);
 
   function save(patch: Partial<DayLog>) {
@@ -322,6 +332,18 @@ export default function App() {
                 </div>
               </div>
 
+              <div className="segmented">
+                {(["today", "week", "month"] as Range[]).map((r) => (
+                  <button
+                    key={r}
+                    className={range === r ? "segBtn active" : "segBtn"}
+                    onClick={() => setRange(r)}
+                  >
+                    {r === "today" ? "Today" : r === "week" ? "Week" : "Month"}
+                  </button>
+                ))}
+              </div>
+
               <div className="progressStack">
                 <ProgressBar label="Protein" value={todayLog?.proteinG ?? 0} max={settings.proteinTarget} suffix=" g" />
                 <ProgressBar label="Steps" value={todayLog?.steps ?? 0} max={settings.stepGoal} />
@@ -365,6 +387,29 @@ export default function App() {
                   </li>
                 ))}
               </ul>
+            </section>
+
+            <section className="card">
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <div>
+                  <h2>Recent activity</h2>
+                  <div className="muted">Last 4 check‑ins</div>
+                </div>
+              </div>
+              <div className="recentList">
+                {recentLogs.length === 0 ? (
+                  <div className="muted">No logs yet.</div>
+                ) : (
+                  recentLogs.map((l) => (
+                    <div key={l.date} className="recentRow">
+                      <div>{l.date}</div>
+                      <div className="muted">{l.weightKg ?? "—"} kg</div>
+                      <div className="muted">{l.steps ?? "—"} steps</div>
+                      <div className="muted">{l.workoutDone ? "Workout ✓" : "Workout —"}</div>
+                    </div>
+                  ))
+                )}
+              </div>
             </section>
 
             <section className="card">

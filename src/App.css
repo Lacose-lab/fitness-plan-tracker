@@ -118,7 +118,31 @@ h3{margin:18px 0 8px}
 .scoreValue{font-weight:950;font-size:22px;color:var(--accent)}
 .scoreLabel{font-size:11px;color:var(--muted)}
 
-.progressStack{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.segmented{
+  display:flex;
+  gap:6px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;
+  padding:6px;
+  margin:12px 0 4px;
+}
+.segBtn{
+  flex:1;
+  background:transparent;
+  border:0;
+  color:var(--muted);
+  padding:8px 10px;
+  border-radius:10px;
+  font-weight:800;
+}
+.segBtn.active{
+  background:rgba(79,140,255,0.2);
+  color:var(--text);
+  border:1px solid rgba(79,140,255,0.4);
+}
+
+.progressStack{margin-top:8px;display:flex;flex-direction:column;gap:10px}
 .progressRow{display:grid;grid-template-columns:90px 1fr 70px;gap:10px;align-items:center}
 .progressLabel{font-size:12px;color:var(--muted);font-weight:700}
 .progressTrack{height:8px;background:rgba(255,255,255,0.08);border-radius:999px;overflow:hidden}
@@ -239,6 +263,9 @@ h3{margin:18px 0 8px}
 .tHead,.tRow{display:grid;grid-template-columns:1.1fr 0.8fr 0.8fr 0.6fr;gap:8px;padding:10px 12px}
 .tHead{background:rgba(79,140,255,0.10);color:var(--muted);font-size:12px}
 .tRow{border-top:1px solid rgba(255,255,255,0.08)}
+
+.recentList{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.recentRow{display:grid;grid-template-columns:1fr 0.8fr 0.9fr 1fr;gap:8px;padding:10px 12px;background:rgba(11,15,26,0.22);border:1px solid rgba(255,255,255,0.08);border-radius:12px}
 
 .hint{margin-top:12px;color:var(--muted);font-size:13px}
 
