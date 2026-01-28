@@ -17,103 +17,91 @@ export type PlanCycle = {
   days: PlanDay[];
 };
 
-const strengthCore = [
-  { name: "Plank", sets: "3×30–60s" },
-  { name: "Dead bug", sets: "3×10/side" },
-  { name: "Side plank", sets: "2×30–45s/side" },
+const ex = (name: string, reps: string, rest?: string, notes?: string): Exercise => ({
+  name,
+  sets: reps,
+  notes: [rest ? `Rest ${rest}` : undefined, notes].filter(Boolean).join(" · ") || undefined,
+});
+
+const day1Exercises: Exercise[] = [
+  ex("Incline dumbbell press", "12–15 reps", "1 min"),
+  ex("Machine chest press", "12–15 reps", "1 min"),
+  ex("Close‑grip seated row", "12–15 reps", "1 min"),
+  ex("Wide‑grip lat pulldown", "10–12 reps", "1 min 30 sec"),
+  ex("Dumbbell shoulder press", "12–15 reps", "1 min"),
+  ex("Dumbbell lateral raises", "15 reps", "1 min"),
+  ex("Dumbbell overhead tricep extension", "12–15 reps", "1 min"),
+  ex("Plank", "20–30 sec", "1 min"),
+  ex("Treadmill walk", "30 min", undefined, "Steady pace"),
 ];
 
-const lowerPool = [
-  { name: "Leg press", sets: "3×8–12" },
-  { name: "Goblet squat", sets: "3×8–12" },
-  { name: "Hack squat", sets: "3×8–12" },
-  { name: "Romanian deadlift (DB)", sets: "3×8–10" },
-  { name: "Hamstring curl", sets: "3×10–15" },
-  { name: "Calf raises", sets: "3×10–15" },
+const day2Exercises: Exercise[] = [
+  ex("Dumbbell goblet squat", "12–15 reps", "1 min 30 sec"),
+  ex("Dumbbell Romanian deadlift", "12–15 reps", "1 min 30 sec"),
+  ex("Leg extensions", "12–15 reps", "1 min 30 sec"),
+  ex("Lunges", "10–12 reps", "1 min 30 sec"),
+  ex("Hip thrusts", "10–12 reps", "1 min"),
+  ex("Dumbbell bicep curls", "12–15 reps", "1 min"),
+  ex("Chest‑supported DB bicep curls", "12–15 reps", "1 min"),
+  ex("Cable tricep pushdown", "12–15 reps", "1 min"),
+  ex("Dumbbell skull crushers", "10–12 reps", "1 min"),
+  ex("Crunches", "12–15 reps", "1 min"),
+  ex("Lying leg raises", "15 reps", "1 min"),
+  ex("Treadmill walk", "30 min", undefined, "Steady pace"),
 ];
 
-const pushPool = [
-  { name: "Dumbbell bench press", sets: "3×8–12" },
-  { name: "Incline DB press", sets: "3×8–12" },
-  { name: "Chest fly (machine)", sets: "2×10–15" },
-  { name: "Shoulder press machine", sets: "3×8–12" },
-  { name: "Lateral raises (cable/DB)", sets: "2×12–15" },
-  { name: "Triceps pressdown", sets: "2×10–15" },
+const day3Exercises: Exercise[] = [
+  ex("Wide‑grip cable row", "10–12 reps", "1 min"),
+  ex("Incline dumbbell press", "10–12 reps", "1 min"),
+  ex("Dumbbell row", "12–15 reps", "1 min"),
+  ex("Flat dumbbell press", "10–12 reps", "1 min 30 sec"),
+  ex("Dumbbell shoulder press", "12–15 reps", "1 min"),
+  ex("Dumbbell lateral raises", "15 reps", "1 min"),
+  ex("Dumbbell hammer curls", "15 reps", "1 min"),
+  ex("Bent‑over rear‑delt fly", "15 reps", "1 min"),
+  ex("Treadmill walk", "30 min", undefined, "Steady pace"),
 ];
 
-const pullPool = [
-  { name: "Lat pulldown", sets: "3×8–12" },
-  { name: "Seated cable row", sets: "3×8–12" },
-  { name: "Chest‑supported row", sets: "3×8–12" },
-  { name: "Face pulls", sets: "2×12–15" },
-  { name: "DB curls", sets: "2×10–15" },
-];
-
-const cardioPool = [
-  { name: "Zone 2 cardio", sets: "35–45 min", notes: "Incline walk / bike." },
-  { name: "Intervals", sets: "10 rounds: 1 min hard / 1 min easy", notes: "Bike/rower best." },
-  { name: "Incline treadmill", sets: "25–30 min", notes: "Alternate 2 min brisk / 2 min easy." },
-  { name: "Stair climber", sets: "20–30 min" },
-  { name: "Rowing", sets: "20–30 min" },
-];
-
-function pick<T>(arr: T[], count: number): T[] {
-  const copy = arr.slice();
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy.slice(0, count);
-}
-
-function asExercise(name: string): Exercise {
-  return { name, sets: "2×10–15" };
-}
-
-export function generatePlanCycle(customExercises: string[], startDate: string, cadenceDays: number): PlanCycle {
-  const custom = customExercises.filter(Boolean).map(asExercise);
-
-  const lower = pick([...lowerPool, ...custom], 2);
-  const push = pick([...pushPool, ...custom], 2);
-  const pull = pick([...pullPool, ...custom], 2);
-  const cardio = pick(cardioPool, 3);
-
+export function generatePlanCycle(_customExercises: string[], startDate: string, cadenceDays: number): PlanCycle {
   const days: PlanDay[] = [
     {
       id: "d1",
-      title: "Day 1 — Strength A",
-      focus: "Lower + Push + Pull",
-      exercises: [...lower, ...push.slice(0, 1), ...pull.slice(0, 1), pick(strengthCore, 1)[0]],
+      title: "Day 1 — Upper Body",
+      focus: "Push/Pull + Core + Cardio",
+      exercises: day1Exercises,
     },
     {
       id: "d2",
-      title: "Day 2 — Cardio + Core",
-      focus: "Zone 2",
-      exercises: [cardio[0], pick(strengthCore, 1)[0]],
+      title: "Day 2 — Lower Body & Arms",
+      focus: "Legs + Arms + Abs",
+      exercises: day2Exercises,
     },
     {
       id: "d3",
-      title: "Day 3 — Strength B",
-      focus: "Upper focus",
-      exercises: [...push, ...pull.slice(0, 1)],
+      title: "Day 3 — Upper Body",
+      focus: "Push/Pull + Cardio",
+      exercises: day3Exercises,
     },
     {
       id: "d4",
-      title: "Day 4 — Conditioning",
-      focus: "Intervals",
-      exercises: [cardio[1], { name: "Mobility (hips/shoulders)", sets: "10 min" }],
+      title: "Day 4 — Recovery",
+      focus: "Mobility + Steps",
+      exercises: [
+        { name: "Light walk", sets: "20–30 min" },
+        { name: "Mobility (hips/shoulders)", sets: "10 min" },
+      ],
     },
     {
       id: "d5",
-      title: "Day 5 — Strength C",
-      focus: "Lower + Back",
-      exercises: [...lower.slice(0, 1), ...pull, pick(strengthCore, 1)[0]],
+      title: "Day 5 — Optional Conditioning",
+      focus: "Cardio",
+      exercises: [{ name: "Zone 2 cardio", sets: "30–40 min" }],
     },
     {
       id: "d6",
-      title: "Day 6 — Cardio",
-      focus: "Steady",
-      exercises: [cardio[2]],
+      title: "Day 6 — Off",
+      focus: "Rest",
+      exercises: [{ name: "Steps + light stretching", sets: "optional" }],
     },
     {
       id: "d7",
