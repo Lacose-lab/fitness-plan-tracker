@@ -19,7 +19,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
-type Tab = "today" | "log" | "plan" | "progress" | "settings";
+type Tab = "today" | "log" | "coach" | "plan" | "progress" | "settings";
 
 type Metric = "weightKg" | "steps" | "calories" | "proteinG";
 
@@ -369,24 +369,6 @@ export default function App() {
             <section className="card">
               <div className="row" style={{ justifyContent: "space-between" }}>
                 <div>
-                  <h2>Coach</h2>
-                  <div className="muted">Automatic recommendations based on your logs.</div>
-                </div>
-              </div>
-              {coachTips.length === 0 ? (
-                <div className="muted">Log a few days and I’ll personalize this.</div>
-              ) : (
-                <ul className="list">
-                  {coachTips.map((tip, i) => (
-                    <li key={i}>{tip}</li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            <section className="card">
-              <div className="row" style={{ justifyContent: "space-between" }}>
-                <div>
                   <h2>Daily checklist</h2>
                   <div className="muted">Tap a row to log — 1–2 taps.</div>
                 </div>
@@ -548,6 +530,22 @@ export default function App() {
                 onChange={(e) => save({ note: e.target.value })}
               />
             </label>
+          </section>
+        )}
+
+        {tab === "coach" && (
+          <section className="card">
+            <h2>Coach</h2>
+            <div className="muted">Automatic recommendations based on your logs.</div>
+            {coachTips.length === 0 ? (
+              <div className="muted" style={{ marginTop: 8 }}>Log a few days and I’ll personalize this.</div>
+            ) : (
+              <ul className="list" style={{ marginTop: 10 }}>
+                {coachTips.map((tip, i) => (
+                  <li key={i}>{tip}</li>
+                ))}
+              </ul>
+            )}
           </section>
         )}
 
@@ -759,6 +757,10 @@ export default function App() {
           <button className={tab === "log" ? "active" : ""} onClick={() => setTab("log")}>
             <Icon><ILog /></Icon>
             <span>Log</span>
+          </button>
+          <button className={tab === "coach" ? "active" : ""} onClick={() => setTab("coach")}>
+            <Icon><IFlame /></Icon>
+            <span>Coach</span>
           </button>
           <button className={tab === "plan" ? "active" : ""} onClick={() => setTab("plan")}>
             <Icon><IPlan /></Icon>
