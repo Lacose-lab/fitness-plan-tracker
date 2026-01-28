@@ -26,34 +26,35 @@ const ex = (name: string, reps: string, rest?: string, notes?: string): Exercise
 const day1Exercises: Exercise[] = [
   ex("Incline dumbbell press", "3×8–12", "1 min"),
   ex("Flat dumbbell press", "3×8–12", "1 min"),
-  ex("Machine chest press", "2×10–15", "1 min"),
+  ex("Butterfly machine", "2×12–15", "1 min"),
   ex("Dumbbell shoulder press", "3×8–12", "1 min"),
   ex("Dumbbell lateral raises", "3×12–15", "1 min"),
-  ex("Triceps pressdown", "2×10–15", "1 min"),
+  ex("Triceps rope pressdown", "2×10–15", "1 min"),
   ex("Plank", "3×30–60s", "1 min"),
   ex("Crunches", "3×12–15", "1 min"),
 ];
 
 const day2Exercises: Exercise[] = [
+  ex("Leg press", "3×10–12", "1 min 30 sec"),
   ex("Goblet squat", "3×10–12", "1 min 30 sec"),
   ex("Romanian deadlift (DB)", "3×8–10", "1 min 30 sec"),
-  ex("Leg press", "3×10–12", "1 min 30 sec"),
   ex("Lunges", "2×10/side", "1 min 30 sec"),
+  ex("Calf raises (DB)", "3×12–15", "1 min"),
   ex("Hanging leg raises", "3×10–12", "1 min"),
   ex("Incline treadmill walk", "25–35 min", undefined, "Zone 2"),
 ];
 
 const day3Exercises: Exercise[] = [
-  ex("Lat pulldown", "3×8–12", "1 min"),
-  ex("Seated cable row", "3×8–12", "1 min"),
-  ex("Chest‑supported row", "2×10–12", "1 min"),
-  ex("Face pulls", "2×12–15", "1 min"),
+  ex("Overhead pulldown (long bar)", "3×8–12", "1 min"),
+  ex("Cable row (short bar/diamond handle)", "3×8–12", "1 min"),
+  ex("Dumbbell row", "2×10–12", "1 min"),
+  ex("Face pulls (rope)", "2×12–15", "1 min"),
   ex("DB curls", "3×10–15", "1 min"),
   ex("Hammer curls", "2×10–12", "1 min"),
 ];
 
 const day4Exercises: Exercise[] = [
-  ex("Zone 2 cardio", "30–40 min", undefined, "Bike / incline walk"),
+  ex("Zone 2 cardio", "30–40 min", undefined, "Treadmill / cross‑walker / pool"),
   ex("Crunches", "3×12–15", "1 min"),
   ex("Lying leg raises", "3×10–12", "1 min"),
   ex("Side plank", "3×30s/side", "1 min"),
@@ -62,10 +63,11 @@ const day4Exercises: Exercise[] = [
 const day5Exercises: Exercise[] = [
   ex("Incline dumbbell press", "3×8–12", "1 min"),
   ex("Flat dumbbell press", "3×8–12", "1 min"),
+  ex("Butterfly machine", "2×12–15", "1 min"),
   ex("Dumbbell lateral raises", "3×12–15", "1 min"),
-  ex("Rear‑delt fly", "2×12–15", "1 min"),
+  ex("Rear‑delt fly (DB)", "2×12–15", "1 min"),
   ex("DB curls", "3×10–12", "1 min"),
-  ex("Cable curls", "2×12–15", "1 min"),
+  ex("Cable curls (short bar)", "2×12–15", "1 min"),
 ];
 
 export function generatePlanCycle(_customExercises: string[], startDate: string, cadenceDays: number): PlanCycle {
