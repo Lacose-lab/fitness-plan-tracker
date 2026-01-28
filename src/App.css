@@ -15,9 +15,9 @@
   --safe-bottom-legacy: constant(safe-area-inset-bottom);
 
   --appbar-height: 64px;
-  --bottomnav-height: 78px;
+  --bottomnav-height: 92px;
   --appbar-total: calc(var(--appbar-height) + max(var(--safe-top), var(--safe-top-legacy), 10px));
-  --bottomnav-total: calc(var(--bottomnav-height) + max(var(--safe-bottom), var(--safe-bottom-legacy), 0px));
+  --bottomnav-total: calc(var(--bottomnav-height) + max(var(--safe-bottom), var(--safe-bottom-legacy), 0px) + 8px);
 }
 
 *{box-sizing:border-box}
@@ -39,8 +39,9 @@ h3{margin:18px 0 8px}
 .muted{color:var(--muted)}
 
 .appShell{
-  height:100svh;
-  height:100dvh;
+  height:100%;
+  min-height:100svh;
+  min-height:100dvh;
   display:flex;
   flex-direction:column;
   padding-top: var(--appbar-total);
@@ -92,6 +93,7 @@ h3{margin:18px 0 8px}
   gap:14px;
   flex:1;
   min-height:0;
+  height: calc(100svh - var(--appbar-total) - var(--bottomnav-total));
   height: calc(100dvh - var(--appbar-total) - var(--bottomnav-total));
   overflow-y:auto;
   -webkit-overflow-scrolling: touch;
@@ -279,7 +281,7 @@ h3{margin:18px 0 8px}
   border-top:1px solid rgba(255,255,255,0.10);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  padding:10px 10px calc(10px + max(var(--safe-bottom), var(--safe-bottom-legacy), 0px));
+  padding:12px 10px calc(12px + max(var(--safe-bottom), var(--safe-bottom-legacy), 0px) + 6px);
 }
 
 .bottomNavInner{

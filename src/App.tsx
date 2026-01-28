@@ -24,7 +24,7 @@ type Metric = "weightKg" | "steps" | "calories" | "proteinG";
 
 type Range = "today" | "week" | "month";
 
-const APP_VERSION = "0.2.2";
+const APP_VERSION = "0.2.3";
 
 function numberOrUndef(v: string): number | undefined {
   const n = Number(v);
