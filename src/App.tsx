@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { exportJson, getCustomExercises, getPlanCycle, getPlanForDate, importJson, listLogs, todayKey, upsertLog, type DayLog, updateCustomExercises } from "./lib/storage";
 import { getSettings, updateSettings } from "./lib/settings";
 import { getSummary } from "./lib/stats";
+import { getCoachTips } from "./lib/coach";
 import type { PlanDay } from "./lib/plan";
 import { Line } from "react-chartjs-2";
 import { Icon, IFlame, ILog, IPlan, IProgress, IProtein, ISettings, ISteps, IToday, IWeight } from "./ui/icons";
@@ -159,6 +160,10 @@ export default function App() {
 
   const todayPlan: PlanDay = useMemo(() => getPlanForDate(today), [today, tick]);
   const selectedPlan = planCycle.days.find((d) => d.id === todayLog?.planDayId) ?? todayPlan;
+  const coachTips = useMemo(
+    () => getCoachTips(logs, todayLog, settings, selectedPlan, summary),
+    [logs, todayLog, settings, selectedPlan, summary]
+  );
 
   const weightData = useMemo(() => {
     const w = logs.filter((l) => typeof l.weightKg === "number");
@@ -359,6 +364,24 @@ export default function App() {
                 <button className="pillBtn" onClick={() => openMetric("calories")}>Add calories</button>
                 <button className="pillBtn" onClick={() => openMetric("proteinG")}>Add protein</button>
               </div>
+            </section>
+
+            <section className="card">
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <div>
+                  <h2>Coach</h2>
+                  <div className="muted">Automatic recommendations based on your logs.</div>
+                </div>
+              </div>
+              {coachTips.length === 0 ? (
+                <div className="muted">Log a few days and I’ll personalize this.</div>
+              ) : (
+                <ul className="list">
+                  {coachTips.map((tip, i) => (
+                    <li key={i}>{tip}</li>
+                  ))}
+                </ul>
+              )}
             </section>
 
             <section className="card">
