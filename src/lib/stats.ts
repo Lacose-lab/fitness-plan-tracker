@@ -43,10 +43,26 @@ export function getSummary() {
 
   const workouts7 = last7.reduce((acc, l) => acc + (l.workoutDone ? 1 : 0), 0);
 
+  const avgProtein7 = last7.length
+    ? Math.round(
+        last7.reduce((acc, l) => acc + (typeof l.proteinG === "number" ? l.proteinG : 0), 0) /
+          Math.max(1, last7.filter((l) => typeof l.proteinG === "number").length || 1)
+      )
+    : null;
+
+  const avgCalories7 = last7.length
+    ? Math.round(
+        last7.reduce((acc, l) => acc + (typeof l.calories === "number" ? l.calories : 0), 0) /
+          Math.max(1, last7.filter((l) => typeof l.calories === "number").length || 1)
+      )
+    : null;
+
   return {
     logs,
     latestWeight,
     avgSteps7,
+    avgProtein7,
+    avgCalories7,
     workouts7,
     lossRate: weeklyLossRateKgPerWeek(logs),
     streak: completionStreak(logs),

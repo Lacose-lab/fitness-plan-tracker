@@ -12,6 +12,8 @@ export type DayLog = {
   planDayId?: string;
   // Daily checklist for the selected plan day (by exercise index)
   completedExerciseIdx?: number[];
+  // Simple per-exercise logging (single set)
+  exerciseLogs?: Record<string, { weight?: number; reps?: number }>; // key = exercise name
   note?: string;
 };
 
@@ -20,6 +22,7 @@ export type Settings = {
   calorieTarget: number;
   proteinTarget: number;
   shuffleEveryDays: number;
+  equipment: string[];
 };
 
 export type AppState = {
@@ -43,6 +46,17 @@ const DEFAULT_SETTINGS: Settings = {
   calorieTarget: 2100,
   proteinTarget: 160,
   shuffleEveryDays: 21,
+  equipment: [
+    "dumbbells",
+    "leg press",
+    "cables",
+    "pulldown",
+    "butterfly",
+    "treadmill",
+    "elliptical",
+    "pool",
+    "bodyweight",
+  ],
 };
 
 export function loadState(): AppState {
@@ -58,7 +72,7 @@ export function loadState(): AppState {
     return {
       version: 2,
       logsByDate: parsed.logsByDate,
-      settings: parsed.settings ?? DEFAULT_SETTINGS,
+      settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
       planCycle: parsed.planCycle,
       customExercises: parsed.customExercises ?? [],
     };

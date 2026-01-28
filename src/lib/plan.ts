@@ -2,6 +2,7 @@ export type Exercise = {
   name: string;
   sets?: string;
   notes?: string;
+  equipment?: string[];
 };
 
 export type PlanDay = {
@@ -17,57 +18,58 @@ export type PlanCycle = {
   days: PlanDay[];
 };
 
-const ex = (name: string, reps: string, rest?: string, notes?: string): Exercise => ({
+const ex = (name: string, reps: string, rest?: string, notes?: string, equipment?: string[]): Exercise => ({
   name,
   sets: reps,
   notes: [rest ? `Rest ${rest}` : undefined, notes].filter(Boolean).join(" · ") || undefined,
+  equipment,
 });
 
 const day1Exercises: Exercise[] = [
-  ex("Incline dumbbell press", "3×8–12", "1 min"),
-  ex("Flat dumbbell press", "3×8–12", "1 min"),
-  ex("Butterfly machine", "2×12–15", "1 min"),
-  ex("Dumbbell shoulder press", "3×8–12", "1 min"),
-  ex("Dumbbell lateral raises", "3×12–15", "1 min"),
-  ex("Triceps rope pressdown", "2×10–15", "1 min"),
-  ex("Plank", "3×30–60s", "1 min"),
-  ex("Crunches", "3×12–15", "1 min"),
+  ex("Incline dumbbell press", "3×8–12", "1 min", undefined, ["dumbbells"]),
+  ex("Flat dumbbell press", "3×8–12", "1 min", undefined, ["dumbbells"]),
+  ex("Butterfly machine", "2×12–15", "1 min", undefined, ["butterfly"]),
+  ex("Dumbbell shoulder press", "3×8–12", "1 min", undefined, ["dumbbells"]),
+  ex("Dumbbell lateral raises", "3×12–15", "1 min", undefined, ["dumbbells"]),
+  ex("Triceps rope pressdown", "2×10–15", "1 min", undefined, ["cables"]),
+  ex("Plank", "3×30–60s", "1 min", undefined, ["bodyweight"]),
+  ex("Crunches", "3×12–15", "1 min", undefined, ["bodyweight"]),
 ];
 
 const day2Exercises: Exercise[] = [
-  ex("Leg press", "3×10–12", "1 min 30 sec"),
-  ex("Goblet squat", "3×10–12", "1 min 30 sec"),
-  ex("Romanian deadlift (DB)", "3×8–10", "1 min 30 sec"),
-  ex("Lunges", "2×10/side", "1 min 30 sec"),
-  ex("Calf raises (DB)", "3×12–15", "1 min"),
-  ex("Hanging leg raises", "3×10–12", "1 min"),
-  ex("Incline treadmill walk", "25–35 min", undefined, "Zone 2"),
+  ex("Leg press", "3×10–12", "1 min 30 sec", undefined, ["leg press"]),
+  ex("Goblet squat", "3×10–12", "1 min 30 sec", undefined, ["dumbbells"]),
+  ex("Romanian deadlift (DB)", "3×8–10", "1 min 30 sec", undefined, ["dumbbells"]),
+  ex("Lunges", "2×10/side", "1 min 30 sec", undefined, ["dumbbells", "bodyweight"]),
+  ex("Calf raises (DB)", "3×12–15", "1 min", undefined, ["dumbbells"]),
+  ex("Hanging leg raises", "3×10–12", "1 min", undefined, ["bodyweight"]),
+  ex("Incline treadmill walk", "25–35 min", undefined, "Zone 2", ["treadmill"]),
 ];
 
 const day3Exercises: Exercise[] = [
-  ex("Overhead pulldown (long bar)", "3×8–12", "1 min"),
-  ex("Cable row (short bar/diamond handle)", "3×8–12", "1 min"),
-  ex("Dumbbell row", "2×10–12", "1 min"),
-  ex("Face pulls (rope)", "2×12–15", "1 min"),
-  ex("DB curls", "3×10–15", "1 min"),
-  ex("Hammer curls", "2×10–12", "1 min"),
+  ex("Overhead pulldown (long bar)", "3×8–12", "1 min", undefined, ["pulldown", "cables"]),
+  ex("Cable row (short bar/diamond handle)", "3×8–12", "1 min", undefined, ["cables"]),
+  ex("Dumbbell row", "2×10–12", "1 min", undefined, ["dumbbells"]),
+  ex("Face pulls (rope)", "2×12–15", "1 min", undefined, ["cables"]),
+  ex("DB curls", "3×10–15", "1 min", undefined, ["dumbbells"]),
+  ex("Hammer curls", "2×10–12", "1 min", undefined, ["dumbbells"]),
 ];
 
 const day4Exercises: Exercise[] = [
-  ex("Zone 2 cardio", "30–40 min", undefined, "Treadmill / cross‑walker / pool"),
-  ex("Crunches", "3×12–15", "1 min"),
-  ex("Lying leg raises", "3×10–12", "1 min"),
-  ex("Side plank", "3×30s/side", "1 min"),
+  ex("Zone 2 cardio", "30–40 min", undefined, "Treadmill / cross‑walker / pool", ["treadmill", "elliptical", "pool"]),
+  ex("Crunches", "3×12–15", "1 min", undefined, ["bodyweight"]),
+  ex("Lying leg raises", "3×10–12", "1 min", undefined, ["bodyweight"]),
+  ex("Side plank", "3×30s/side", "1 min", undefined, ["bodyweight"]),
 ];
 
 const day5Exercises: Exercise[] = [
-  ex("Incline dumbbell press", "3×8–12", "1 min"),
-  ex("Flat dumbbell press", "3×8–12", "1 min"),
-  ex("Butterfly machine", "2×12–15", "1 min"),
-  ex("Dumbbell lateral raises", "3×12–15", "1 min"),
-  ex("Rear‑delt fly (DB)", "2×12–15", "1 min"),
-  ex("DB curls", "3×10–12", "1 min"),
-  ex("Cable curls (short bar)", "2×12–15", "1 min"),
+  ex("Incline dumbbell press", "3×8–12", "1 min", undefined, ["dumbbells"]),
+  ex("Flat dumbbell press", "3×8–12", "1 min", undefined, ["dumbbells"]),
+  ex("Butterfly machine", "2×12–15", "1 min", undefined, ["butterfly"]),
+  ex("Dumbbell lateral raises", "3×12–15", "1 min", undefined, ["dumbbells"]),
+  ex("Rear‑delt fly (DB)", "2×12–15", "1 min", undefined, ["dumbbells"]),
+  ex("DB curls", "3×10–12", "1 min", undefined, ["dumbbells"]),
+  ex("Cable curls (short bar)", "2×12–15", "1 min", undefined, ["cables"]),
 ];
 
 export function generatePlanCycle(_customExercises: string[], startDate: string, cadenceDays: number): PlanCycle {
@@ -106,13 +108,13 @@ export function generatePlanCycle(_customExercises: string[], startDate: string,
       id: "d6",
       title: "Day 6 — Off",
       focus: "Rest",
-      exercises: [{ name: "Steps + light stretching", sets: "optional" }],
+      exercises: [{ name: "Steps + light stretching", sets: "optional", equipment: ["bodyweight"] }],
     },
     {
       id: "d7",
       title: "Day 7 — Off",
       focus: "Rest",
-      exercises: [{ name: "Steps + light stretching", sets: "optional" }],
+      exercises: [{ name: "Steps + light stretching", sets: "optional", equipment: ["bodyweight"] }],
     },
   ];
 

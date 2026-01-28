@@ -41,6 +41,10 @@ export function getCoachTips(
     tips.push("Last 7‑day steps average is low — add a 20–30 min walk.");
   }
 
+  if (summary.avgProtein7 !== null && summary.avgProtein7 < settings.proteinTarget * 0.85) {
+    tips.push("Weekly protein average is low — aim for your target most days.");
+  }
+
   if (summary.workouts7 < 3) {
     tips.push("Only a few workouts in the last 7 days — aim for 3–4 this week.");
   }

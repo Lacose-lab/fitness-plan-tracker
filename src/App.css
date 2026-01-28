@@ -233,10 +233,10 @@ h3{margin:18px 0 8px}
 .planTitle{font-weight:900}
 
 .checklist{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
-.checkRow{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.checkRow{display:flex;gap:12px;align-items:flex-start;cursor:pointer;flex:1}
 .checkRow input{width:20px;height:20px;margin-top:2px;accent-color: var(--accent)}
 .checkBody{flex:1}
-.checklist li{border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:10px 12px;background:rgba(11,15,26,0.22)}
+.checklist li{border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:10px 12px;background:rgba(11,15,26,0.22);display:flex;gap:10px;align-items:center;justify-content:space-between}
 .checklist li.checked{background:rgba(29,191,115,0.10);border-color:rgba(29,191,115,0.28)}
 .checklist li.checked .exName{opacity:0.88;text-decoration:line-through}
 .exName{font-weight:800}

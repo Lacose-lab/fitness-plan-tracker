@@ -27,6 +27,18 @@ type Range = "today" | "week" | "month";
 
 const APP_VERSION = "0.3.1";
 
+const EQUIPMENT_OPTIONS = [
+  "dumbbells",
+  "leg press",
+  "cables",
+  "pulldown",
+  "butterfly",
+  "treadmill",
+  "elliptical",
+  "pool",
+  "bodyweight",
+];
+
 function numberOrUndef(v: string): number | undefined {
   const n = Number(v);
   return Number.isFinite(n) ? n : undefined;
@@ -49,6 +61,12 @@ function ProgressBar({ label, value, max, suffix }: { label: string; value: numb
       </div>
     </div>
   );
+}
+
+function exerciseAllowed(ex: PlanDay["exercises"][number], equipment: string[]) {
+  if (!equipment?.length) return true;
+  if (!ex.equipment || ex.equipment.length === 0) return true;
+  return ex.equipment.some((eq) => equipment.includes(eq));
 }
 
 function MetricSheet({
@@ -134,6 +152,85 @@ function MetricSheet({
   );
 }
 
+function ExerciseLogSheet({
+  open,
+  exerciseName,
+  initialWeight,
+  initialReps,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  exerciseName: string;
+  initialWeight?: number;
+  initialReps?: number;
+  onClose: () => void;
+  onSave: (payload: { weight?: number; reps?: number }) => void;
+}) {
+  const [weight, setWeight] = useState<string>(initialWeight?.toString() ?? "");
+  const [reps, setReps] = useState<string>(initialReps?.toString() ?? "");
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (open) {
+      setWeight(initialWeight?.toString() ?? "");
+      setReps(initialReps?.toString() ?? "");
+    }
+  }, [open, initialWeight, initialReps]);
+
+  if (!open) return null;
+
+  return (
+    <div className="sheetOverlay" onClick={onClose}>
+      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="sheetHeader">
+          <div>
+            <div className="sheetTitle">Log set</div>
+            <div className="muted">{exerciseName}</div>
+          </div>
+          <button className="iconBtn" onClick={onClose} aria-label="Close">
+            ✕
+          </button>
+        </div>
+
+        <div className="sheetBody">
+          <div className="sheetInputRow">
+            <input
+              className="sheetInput"
+              inputMode="decimal"
+              placeholder="Weight"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              autoFocus
+            />
+            <div className="sheetUnit">kg</div>
+          </div>
+          <div className="sheetInputRow">
+            <input
+              className="sheetInput"
+              inputMode="numeric"
+              placeholder="Reps"
+              value={reps}
+              onChange={(e) => setReps(e.target.value)}
+            />
+            <div className="sheetUnit">reps</div>
+          </div>
+
+          <button
+            className="btn primary"
+            onClick={() => {
+              onSave({ weight: numberOrUndef(weight), reps: numberOrUndef(reps) });
+              onClose();
+            }}
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [tab, setTab] = useState<Tab>("today");
   const [tick, setTick] = useState(0);
@@ -141,6 +238,11 @@ export default function App() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetMetric, setSheetMetric] = useState<Metric>("weightKg");
   const [range, setRange] = useState<Range>("today");
+
+  const [logSheetOpen, setLogSheetOpen] = useState(false);
+  const [logExerciseName, setLogExerciseName] = useState<string>("");
+  const [logInitialWeight, setLogInitialWeight] = useState<number | undefined>(undefined);
+  const [logInitialReps, setLogInitialReps] = useState<number | undefined>(undefined);
 
   const today = useMemo(() => todayKey(), []);
   const logs = useMemo(() => listLogs(), [tick]);
@@ -164,6 +266,25 @@ export default function App() {
     () => getCoachTips(logs, todayLog, settings, selectedPlan, summary),
     [logs, todayLog, settings, selectedPlan, summary]
   );
+
+  const visibleExercises = useMemo(() => {
+    const equipment = settings.equipment ?? [];
+    return selectedPlan.exercises
+      .map((ex, idx) => ({ ex, idx }))
+      .filter(({ ex }) => exerciseAllowed(ex, equipment));
+  }, [selectedPlan.exercises, settings]);
+
+  function findLastExerciseLog(name: string) {
+    for (let i = logs.length - 1; i >= 0; i--) {
+      const log = logs[i];
+      if (log.date === today) continue;
+      const entry = log.exerciseLogs?.[name];
+      if (entry && (typeof entry.weight === "number" || typeof entry.reps === "number")) {
+        return entry;
+      }
+    }
+    return undefined;
+  }
 
   const weightData = useMemo(() => {
     const w = logs.filter((l) => typeof l.weightKg === "number");
@@ -203,8 +324,9 @@ export default function App() {
     else current.add(i);
 
     const next = Array.from(current).sort((a, b) => a - b);
-    const total = selectedPlan.exercises.length;
-    const allDone = total > 0 && next.length === total;
+    const total = visibleExercises.length;
+    const doneVisible = visibleExercises.filter(({ idx }) => next.includes(idx)).length;
+    const allDone = total > 0 && doneVisible === total;
 
     save({ completedExerciseIdx: next, workoutDone: allDone ? true : todayLog?.workoutDone });
   }
@@ -216,6 +338,19 @@ export default function App() {
   function openMetric(m: Metric) {
     setSheetMetric(m);
     setSheetOpen(true);
+  }
+
+  function toggleEquipment(eq: string) {
+    const current = new Set(settings.equipment ?? []);
+    if (current.has(eq)) current.delete(eq);
+    else current.add(eq);
+    updateSettings({ equipment: Array.from(current) });
+    setTick((t) => t + 1);
+  }
+
+  function saveExerciseLog(name: string, payload: { weight?: number; reps?: number }) {
+    const existing = todayLog?.exerciseLogs ?? {};
+    save({ exerciseLogs: { ...existing, [name]: payload } });
   }
 
   const sheetConfig = useMemo(() => {
@@ -270,12 +405,12 @@ export default function App() {
     const stepsRatio = Math.min(1, (todayLog?.steps ?? 0) / Math.max(1, settings.stepGoal));
     const workoutRatio = Math.min(
       1,
-      (todayLog?.completedExerciseIdx?.length ?? 0) / Math.max(1, selectedPlan.exercises.length)
+      (todayLog?.completedExerciseIdx?.length ?? 0) / Math.max(1, visibleExercises.length)
     );
     const weightDone = typeof todayLog?.weightKg === "number" ? 1 : 0;
     const score = (proteinRatio + stepsRatio + workoutRatio + weightDone) / 4;
     return Math.round(score * 100);
-  }, [todayLog, settings, selectedPlan.exercises.length]);
+  }, [todayLog, settings, visibleExercises.length]);
 
   const metricIcon = (m: Metric) => {
     switch (m) {
@@ -353,7 +488,7 @@ export default function App() {
                 <ProgressBar
                   label="Workout"
                   value={todayLog?.completedExerciseIdx?.length ?? 0}
-                  max={Math.max(1, selectedPlan.exercises.length)}
+                  max={Math.max(1, visibleExercises.length)}
                 />
                 <ProgressBar label="Weight" value={typeof todayLog?.weightKg === "number" ? 1 : 0} max={1} />
               </div>
@@ -447,27 +582,44 @@ export default function App() {
 
                 <div className="muted" style={{ marginTop: 10 }}>
                   {(() => {
-                    const done = (todayLog?.completedExerciseIdx ?? []).length;
-                    const total = selectedPlan.exercises.length;
+                    const done = visibleExercises.filter(({ idx }) => (todayLog?.completedExerciseIdx ?? []).includes(idx)).length;
+                    const total = visibleExercises.length;
                     return `${done}/${total} completed`;
                   })()}
                 </div>
 
                 <ul className="checklist">
-                  {selectedPlan.exercises.map((ex, i) => {
-                    const checked = (todayLog?.completedExerciseIdx ?? []).includes(i);
+                  {visibleExercises.map(({ ex, idx }) => {
+                    const checked = (todayLog?.completedExerciseIdx ?? []).includes(idx);
+                    const last = findLastExerciseLog(ex.name);
+                    const todayEntry = todayLog?.exerciseLogs?.[ex.name];
+                    const display = todayEntry ?? last;
                     return (
-                      <li key={i} className={checked ? "checked" : ""}>
+                      <li key={idx} className={checked ? "checked" : ""}>
                         <label className="checkRow">
-                          <input type="checkbox" checked={checked} onChange={() => toggleExercise(i)} />
+                          <input type="checkbox" checked={checked} onChange={() => toggleExercise(idx)} />
                           <div className="checkBody">
                             <div className="exName">{ex.name}</div>
                             <div className="exMeta">
                               {ex.sets ? <span className="pill">{ex.sets}</span> : null}
                               {ex.notes ? <span className="muted">{ex.notes}</span> : null}
                             </div>
+                            {display ? (
+                              <div className="muted">Last: {display.weight ?? "—"} kg × {display.reps ?? "—"}</div>
+                            ) : null}
                           </div>
                         </label>
+                        <button
+                          className="btn"
+                          onClick={() => {
+                            setLogExerciseName(ex.name);
+                            setLogInitialWeight(todayEntry?.weight ?? last?.weight);
+                            setLogInitialReps(todayEntry?.reps ?? last?.reps);
+                            setLogSheetOpen(true);
+                          }}
+                        >
+                          Log set
+                        </button>
                       </li>
                     );
                   })}
@@ -477,10 +629,10 @@ export default function App() {
                   <button
                     className={todayLog?.workoutDone ? "btn good" : "btn"}
                     onClick={() => {
-                      const total = selectedPlan.exercises.length;
-                      const done = (todayLog?.completedExerciseIdx ?? []).length;
+                      const total = visibleExercises.length;
+                      const done = visibleExercises.filter(({ idx }) => (todayLog?.completedExerciseIdx ?? []).includes(idx)).length;
                       if (!todayLog?.workoutDone && total > 0 && done !== total) {
-                        save({ workoutDone: true, completedExerciseIdx: selectedPlan.exercises.map((_, i) => i) });
+                        save({ workoutDone: true, completedExerciseIdx: visibleExercises.map(({ idx }) => idx) });
                       } else {
                         save({ workoutDone: !todayLog?.workoutDone });
                       }
@@ -534,19 +686,43 @@ export default function App() {
         )}
 
         {tab === "coach" && (
-          <section className="card">
-            <h2>Coach</h2>
-            <div className="muted">Automatic recommendations based on your logs.</div>
-            {coachTips.length === 0 ? (
-              <div className="muted" style={{ marginTop: 8 }}>Log a few days and I’ll personalize this.</div>
-            ) : (
-              <ul className="list" style={{ marginTop: 10 }}>
-                {coachTips.map((tip, i) => (
-                  <li key={i}>{tip}</li>
-                ))}
-              </ul>
-            )}
-          </section>
+          <>
+            <section className="card">
+              <h2>Coach</h2>
+              <div className="muted">Automatic recommendations based on your logs.</div>
+              {coachTips.length === 0 ? (
+                <div className="muted" style={{ marginTop: 8 }}>Log a few days and I’ll personalize this.</div>
+              ) : (
+                <ul className="list" style={{ marginTop: 10 }}>
+                  {coachTips.map((tip, i) => (
+                    <li key={i}>{tip}</li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section className="card">
+              <h2>Weekly challenges</h2>
+              <div className="muted">Simple targets to keep fat‑loss moving.</div>
+              <div className="progressStack" style={{ marginTop: 10 }}>
+                <ProgressBar label="Workouts" value={summary.workouts7} max={4} />
+                <ProgressBar label="Avg steps" value={summary.avgSteps7 ?? 0} max={settings.stepGoal} />
+                <ProgressBar label="Avg protein" value={summary.avgProtein7 ?? 0} max={settings.proteinTarget} suffix=" g" />
+              </div>
+            </section>
+
+            <section className="card">
+              <h2>Recovery view</h2>
+              <div className="muted">Pace your week so performance stays high.</div>
+              <div style={{ marginTop: 10 }}>
+                {(() => {
+                  if (summary.workouts7 >= 5) return "High load: prioritize sleep + light walks today.";
+                  if (summary.workouts7 <= 2) return "Low load: you’re fresh — push a full session.";
+                  return "Balanced load: keep intensity steady and recover well.";
+                })()}
+              </div>
+            </section>
+          </>
         )}
 
         {tab === "plan" && (
@@ -563,15 +739,17 @@ export default function App() {
                     </div>
                   </div>
                   <ul className="list">
-                    {d.exercises.map((ex, i) => (
-                      <li key={i}>
-                        <div className="exName">{ex.name}</div>
-                        <div className="exMeta">
-                          {ex.sets ? <span className="pill">{ex.sets}</span> : null}
-                          {ex.notes ? <span className="muted">{ex.notes}</span> : null}
-                        </div>
-                      </li>
-                    ))}
+                    {d.exercises
+                      .filter((ex) => exerciseAllowed(ex, settings.equipment ?? []))
+                      .map((ex, i) => (
+                        <li key={i}>
+                          <div className="exName">{ex.name}</div>
+                          <div className="exMeta">
+                            {ex.sets ? <span className="pill">{ex.sets}</span> : null}
+                            {ex.notes ? <span className="muted">{ex.notes}</span> : null}
+                          </div>
+                        </li>
+                      ))}
                   </ul>
                 </div>
               ))}
@@ -682,6 +860,21 @@ export default function App() {
               </label>
             </div>
 
+            <h3>Equipment filters</h3>
+            <div className="grid2">
+              {EQUIPMENT_OPTIONS.map((eq) => (
+                <label key={eq} className="checkRow">
+                  <input
+                    type="checkbox"
+                    checked={(settings.equipment ?? []).includes(eq)}
+                    onChange={() => toggleEquipment(eq)}
+                  />
+                  <span style={{ textTransform: "capitalize" }}>{eq}</span>
+                </label>
+              ))}
+            </div>
+            <div className="muted">Plan + Today will hide exercises that need unchecked equipment.</div>
+
             <h3>Workout plan</h3>
             <label className="field">
               <span>Custom exercises (one per line)</span>
@@ -787,6 +980,15 @@ export default function App() {
           const patch: Partial<DayLog> = { [sheetMetric]: n } as Partial<DayLog>;
           save(patch);
         }}
+      />
+
+      <ExerciseLogSheet
+        open={logSheetOpen}
+        exerciseName={logExerciseName}
+        initialWeight={logInitialWeight}
+        initialReps={logInitialReps}
+        onClose={() => setLogSheetOpen(false)}
+        onSave={(payload) => saveExerciseLog(logExerciseName, payload)}
       />
     </div>
   );
