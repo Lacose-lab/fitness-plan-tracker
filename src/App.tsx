@@ -1,9 +1,9 @@
 import "./App.css";
 import { useEffect, useMemo, useState } from "react";
-import { WEEK_PLAN } from "./lib/plan";
-import { exportJson, importJson, listLogs, todayKey, upsertLog, type DayLog } from "./lib/storage";
+import { exportJson, getCustomExercises, getPlanCycle, getPlanForDate, importJson, listLogs, todayKey, upsertLog, type DayLog, updateCustomExercises } from "./lib/storage";
 import { getSettings, updateSettings } from "./lib/settings";
 import { getSummary } from "./lib/stats";
+import type { PlanDay } from "./lib/plan";
 import { Line } from "react-chartjs-2";
 import { Icon, IFlame, ILog, IPlan, IProgress, IProtein, ISettings, ISteps, IToday, IWeight } from "./ui/icons";
 import {
@@ -24,7 +24,7 @@ type Metric = "weightKg" | "steps" | "calories" | "proteinG";
 
 type Range = "today" | "week" | "month";
 
-const APP_VERSION = "0.2.3";
+const APP_VERSION = "0.3.0";
 
 function numberOrUndef(v: string): number | undefined {
   const n = Number(v);
@@ -146,21 +146,19 @@ export default function App() {
   const todayLog: DayLog | undefined = useMemo(() => logs.find((l) => l.date === today), [logs, today]);
   const settings = useMemo(() => getSettings(), [tick]);
   const summary = useMemo(() => getSummary(), [tick]);
+  const customExercises = useMemo(() => getCustomExercises(), [tick]);
+  const planCycle = useMemo(() => getPlanCycle(today), [today, tick]);
 
   useEffect(() => {
     if (!todayLog?.planDayId) {
-      const weekday = new Date().getDay();
-      const dayIndex = weekday === 0 ? 6 : weekday - 1; // Mon=0..Sun=6
-      const suggested = WEEK_PLAN[dayIndex]?.id;
-      if (suggested) {
-        upsertLog(today, { planDayId: suggested, completedExerciseIdx: [] });
-        setTick((t) => t + 1);
-      }
+      upsertLog(today, { planDayId: todayPlan.id, completedExerciseIdx: [] });
+      setTick((t) => t + 1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const selectedPlan = WEEK_PLAN.find((d) => d.id === todayLog?.planDayId) ?? WEEK_PLAN[0];
+  const todayPlan: PlanDay = useMemo(() => getPlanForDate(today), [today, tick]);
+  const selectedPlan = planCycle.days.find((d) => d.id === todayLog?.planDayId) ?? todayPlan;
 
   const weightData = useMemo(() => {
     const w = logs.filter((l) => typeof l.weightKg === "number");
@@ -423,7 +421,7 @@ export default function App() {
               <label className="field">
                 <span>Planned session</span>
                 <select value={todayLog?.planDayId ?? selectedPlan.id} onChange={(e) => setPlanDay(e.target.value)}>
-                  {WEEK_PLAN.map((d) => (
+                  {planCycle.days.map((d) => (
                     <option key={d.id} value={d.id}>
                       {d.title}
                     </option>
@@ -535,7 +533,7 @@ export default function App() {
             <h2>Weekly plan</h2>
             <div className="muted">Run this 8–12 weeks. Add weight when you hit the top reps.</div>
             <div className="stack">
-              {WEEK_PLAN.map((d) => (
+              {planCycle.days.map((d) => (
                 <div key={d.id} className="planDay">
                   <div className="planDayHeader">
                     <div>
@@ -662,6 +660,24 @@ export default function App() {
                 />
               </label>
             </div>
+
+            <h3>Workout plan</h3>
+            <label className="field">
+              <span>Custom exercises (one per line)</span>
+              <textarea
+                rows={6}
+                value={customExercises.join("\n")}
+                onChange={(e) => {
+                  const list = e.target.value
+                    .split("\n")
+                    .map((v) => v.trim())
+                    .filter(Boolean);
+                  updateCustomExercises(list);
+                  setTick((t) => t + 1);
+                }}
+              />
+            </label>
+            <div className="muted">Plan shuffles automatically every few weeks.</div>
 
             <h3>Backup</h3>
             <div className="row">
